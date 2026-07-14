@@ -129,7 +129,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
           <QuestionListSkeleton count={10} />
         ) : questions && questions.length > 0 ? (
           <div className="space-y-2">
-            {questions.map((q) => (
+            {questions.map((q, idx) => (
               <div
                 key={q.id}
                 id={`question-${q.id}`}
@@ -139,6 +139,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
                   question={q}
                   bookmarkFolders={bookmarkFolders || []}
                   onUpdate={handleRefresh}
+                  index={idx + 1}
                 />
               </div>
             ))}

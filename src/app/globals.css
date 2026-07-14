@@ -55,11 +55,11 @@
   --color-accent-emerald: #10b981;
 
   /* Heatmap colors */
-  --color-heatmap-0: oklch(0.2 0 0);
-  --color-heatmap-1: oklch(0.35 0.15 155);
-  --color-heatmap-2: oklch(0.45 0.18 155);
-  --color-heatmap-3: oklch(0.55 0.2 155);
-  --color-heatmap-4: oklch(0.65 0.22 155);
+  --color-heatmap-0: #1e1e1e;
+  --color-heatmap-1: #166534;
+  --color-heatmap-2: #16a34a;
+  --color-heatmap-3: #22c55e;
+  --color-heatmap-4: #4ade80;
 }
 
 /* Dark-first premium theme */

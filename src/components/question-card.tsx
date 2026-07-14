@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { ExternalLink, CirclePlay, StickyNote, Bookmark, RotateCcw, Check } from 'lucide-react'
+import { ExternalLink, CirclePlay, StickyNote, Bookmark, RotateCcw, Check, Star } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { toggleQuestionSolved, markRevisionComplete, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder } from '@/lib/actions/questions'
+import { toggleQuestionSolved, markRevisionComplete, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision } from '@/lib/actions/questions'
 import { Input } from '@/components/ui/input'
 import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
 import { toast } from 'sonner'
@@ -19,14 +19,16 @@ interface QuestionCardProps {
   bookmarkFolders?: BookmarkFolder[]
   questionFolderIds?: string[]
   onUpdate?: () => void
+  index?: number
 }
 
-export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds = [], onUpdate }: QuestionCardProps) {
+export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds = [], onUpdate, index }: QuestionCardProps) {
   const [isSolved, setIsSolved] = useState(question.progress?.status === 'solved')
   const [animateSolve, setAnimateSolve] = useState(false)
   const [noteText, setNoteText] = useState(question.progress?.note || '')
   const [newFolderName, setNewFolderName] = useState('')
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
+  const [isSavingRevision, setIsSavingRevision] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const difficultyClass = question.difficulty === 'Easy'
@@ -62,6 +64,19 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
       toast.error('Failed to mark revision')
     }
   }, [question.current_revision, question.id, onUpdate])
+
+  const handleSaveToRevision = useCallback(async () => {
+    setIsSavingRevision(true)
+    try {
+      await scheduleQuestionRevision(question.id)
+      onUpdate?.()
+      toast.success('Saved to revision schedule! ⭐')
+    } catch {
+      toast.error('Failed to save to revision')
+    } finally {
+      setIsSavingRevision(false)
+    }
+  }, [question.id, onUpdate])
 
   const handleNoteChange = useCallback((value: string) => {
     setNoteText(value)
@@ -106,8 +121,17 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
     }
   }, [newFolderName, question.id, onUpdate])
 
+  const hasRevisionScheduled = (question.revision_count?.total || 0) > 0
+
   return (
     <div className="group flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
+      {/* Row index number */}
+      {index !== undefined && (
+        <span className="flex-shrink-0 font-mono text-xs text-muted-foreground/50 w-6 text-right select-none">
+          {index}
+        </span>
+      )}
+
       {/* Done checkbox */}
       <div className={cn('flex-shrink-0', animateSolve && 'solve-animation')}>
         <Checkbox
@@ -121,9 +145,9 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
         />
       </div>
 
-      {/* Question number */}
+      {/* LeetCode question number */}
       {question.leetcode_number && (
-        <span className="flex-shrink-0 font-mono text-sm text-muted-foreground w-10 text-right">
+        <span className="flex-shrink-0 font-mono text-sm text-muted-foreground/60 w-8 text-right">
           {question.leetcode_number}
         </span>
       )}
@@ -138,26 +162,21 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
 
       {/* Topic badge */}
       {question.topic && (
-        <span className="hidden lg:inline-flex text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md truncate max-w-32">
+        <span className="hidden lg:inline-flex text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md truncate max-w-36 flex-shrink-0">
           {question.topic}
         </span>
       )}
 
-      {/* Difficulty badge */}
-      <Badge variant="outline" className={cn('flex-shrink-0 text-xs font-medium', difficultyClass)}>
-        {question.difficulty}
-      </Badge>
-
       {/* Revision count */}
-      {question.revision_count.total > 0 && (
-        <span className="hidden sm:inline-flex text-xs font-mono text-muted-foreground">
+      {(question.revision_count?.total || 0) > 0 && (
+        <span className="hidden sm:inline-flex text-xs font-mono text-muted-foreground flex-shrink-0">
           {question.revision_count.completed}/{question.revision_count.total}
         </span>
       )}
 
-      {/* Action buttons */}
-      <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
-        {/* Revision button */}
+      {/* Action buttons — evenly spaced */}
+      <div className="flex items-center gap-2 ml-2">
+        {/* Mark revision done */}
         <Tooltip>
           <TooltipTrigger
             render={
@@ -165,16 +184,16 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
                 variant="ghost"
                 size="icon"
                 className={cn(
-                  'h-7 w-7',
+                  'h-8 w-8 rounded-lg',
                   question.current_revision
                     ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'
-                    : 'text-muted-foreground/40 cursor-not-allowed'
+                    : 'text-muted-foreground/30 cursor-not-allowed'
                 )}
                 onClick={handleRevision}
                 disabled={!question.current_revision}
                 aria-label="Mark revision complete"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
+                <RotateCcw className="w-4 h-4" />
               </Button>
             }
           />
@@ -185,7 +204,7 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
           </TooltipContent>
         </Tooltip>
 
-        {/* Solve button */}
+        {/* LeetCode solve link */}
         {question.slug && (
           <Tooltip>
             <TooltipTrigger
@@ -195,17 +214,17 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={`Solve ${question.title} on LeetCode`}
-                  className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                 />
               }
             >
-              <ExternalLink className="w-3.5 h-3.5" />
+              <ExternalLink className="w-4 h-4" />
             </TooltipTrigger>
             <TooltipContent>Open on LeetCode</TooltipContent>
           </Tooltip>
         )}
 
-        {/* YouTube button */}
+        {/* YouTube video solution */}
         {question.youtube_url && (
           <Tooltip>
             <TooltipTrigger
@@ -214,16 +233,40 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
                   href={question.youtube_url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Watch solution video"
-                  className="inline-flex items-center justify-center h-7 w-7 rounded-lg text-red-400 hover:text-red-300 hover:bg-muted transition-colors"
+                  aria-label="Watch NeetCode solution video"
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
                 />
               }
             >
-              <CirclePlay className="w-3.5 h-3.5" />
+              <CirclePlay className="w-4 h-4" />
             </TooltipTrigger>
-            <TooltipContent>Watch video solution</TooltipContent>
+            <TooltipContent>Watch NeetCode solution</TooltipContent>
           </Tooltip>
         )}
+
+        {/* Save to revision */}
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-8 w-8 rounded-lg transition-colors',
+                  hasRevisionScheduled
+                    ? 'text-violet-400 hover:text-violet-300 hover:bg-violet-400/10'
+                    : 'text-muted-foreground/50 hover:text-violet-400 hover:bg-violet-400/10'
+                )}
+                onClick={handleSaveToRevision}
+                disabled={isSavingRevision}
+                aria-label="Save to revision schedule"
+              >
+                <Star className={cn('w-4 h-4', hasRevisionScheduled && 'fill-current')} />
+              </Button>
+            }
+          />
+          <TooltipContent>{hasRevisionScheduled ? 'Saved to revision' : 'Save to revision'}</TooltipContent>
+        </Tooltip>
 
         {/* Note button */}
         <Popover>
@@ -235,10 +278,10 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn('h-7 w-7', noteText ? 'text-primary' : 'text-muted-foreground')}
+                      className={cn('h-8 w-8 rounded-lg', noteText ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
                       aria-label="Add note"
                     >
-                      <StickyNote className="w-3.5 h-3.5" />
+                      <StickyNote className="w-4 h-4" />
                     </Button>
                   }
                 />
@@ -270,10 +313,10 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
                     <Button
                       variant="ghost"
                       size="icon"
-                      className={cn('h-7 w-7', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground')}
+                      className={cn('h-8 w-8 rounded-lg', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
                       aria-label="Bookmark"
                     >
-                      <Bookmark className={cn('w-3.5 h-3.5', questionFolderIds.length > 0 && 'fill-current')} />
+                      <Bookmark className={cn('w-4 h-4', questionFolderIds.length > 0 && 'fill-current')} />
                     </Button>
                   }
                 />
@@ -321,6 +364,11 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
           </PopoverContent>
         </Popover>
       </div>
+
+      {/* Difficulty badge — always at the very end */}
+      <Badge variant="outline" className={cn('flex-shrink-0 text-xs font-medium ml-1', difficultyClass)}>
+        {question.difficulty}
+      </Badge>
     </div>
   )
 }

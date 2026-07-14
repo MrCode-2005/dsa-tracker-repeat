@@ -169,3 +169,45 @@ export async function deleteBookmarkFolder(folderId: string) {
   await supabase.from('bookmark_folders').delete().eq('id', folderId).eq('user_id', user.id)
   revalidatePath('/', 'layout')
 }
+
+export async function scheduleQuestionRevision(questionId: string) {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  const now = new Date()
+
+  // Spaced repetition cycle: 1, 3, 7, 21 days
+  const CYCLE_DAYS = [1, 3, 7, 21]
+
+  // Check existing revision schedule for this question
+  const { data: existing } = await supabase
+    .from('revision_schedule')
+    .select('cycle_stage')
+    .eq('user_id', user.id)
+    .eq('question_id', questionId)
+    .eq('completed', false)
+    .order('cycle_stage', { ascending: false })
+    .limit(1)
+
+  const lastStage = existing?.[0]?.cycle_stage || 0
+  const nextStage = Math.min(lastStage + 1, CYCLE_DAYS.length)
+
+  if (nextStage > CYCLE_DAYS.length) {
+    // Already has all cycles scheduled — just confirm
+    return
+  }
+
+  const daysUntilRevision = CYCLE_DAYS[nextStage - 1]
+  const scheduledDate = new Date(now)
+  scheduledDate.setDate(scheduledDate.getDate() + daysUntilRevision)
+
+  const { error } = await supabase.from('revision_schedule').insert({
+    user_id: user.id,
+    question_id: questionId,
+    scheduled_date: scheduledDate.toISOString().split('T')[0],
+    cycle_stage: nextStage,
+  })
+
+  if (error) throw error
+  revalidatePath('/', 'layout')
+}

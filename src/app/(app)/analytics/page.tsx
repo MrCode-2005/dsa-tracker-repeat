@@ -95,7 +95,7 @@ export default function AnalyticsPage() {
                             <Cell key={entry.name} fill={DIFF_COLORS[entry.name || 'Easy']} />
                           ))}
                         </Pie>
-                        <RTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                        <RTooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2e2e4e', borderRadius: '8px', fontSize: '12px', color: '#e2e8f0' }} />
                       </PieChart>
                     </ResponsiveContainer>
                   </div>
@@ -126,9 +126,9 @@ export default function AnalyticsPage() {
                 <div className="h-52">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={topicProgress?.slice(0, 10)} layout="vertical" margin={{ left: 0, right: 8 }}>
-                      <XAxis type="number" tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                      <YAxis type="category" dataKey="topic" width={120} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
-                      <RTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                      <YAxis type="category" dataKey="topic" width={120} tick={{ fontSize: 10, fill: '#94a3b8' }} />
+                      <RTooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2e2e4e', borderRadius: '8px', fontSize: '12px', color: '#e2e8f0' }} />
                       <Bar dataKey="solved" fill="#8b5cf6" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
@@ -148,10 +148,10 @@ export default function AnalyticsPage() {
               <div className="h-52">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={cumulative}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
-                    <YAxis tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} />
-                    <RTooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#2e2e4e" />
+                    <XAxis dataKey="date" tick={{ fontSize: 10, fill: '#94a3b8' }} tickFormatter={(v) => new Date(v).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} />
+                    <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} />
+                    <RTooltip contentStyle={{ backgroundColor: '#1a1a2e', border: '1px solid #2e2e4e', borderRadius: '8px', fontSize: '12px', color: '#e2e8f0' }} />
                     <Area type="monotone" dataKey="cumulative" stroke="#8b5cf6" fill="#8b5cf630" strokeWidth={2} />
                   </AreaChart>
                 </ResponsiveContainer>
