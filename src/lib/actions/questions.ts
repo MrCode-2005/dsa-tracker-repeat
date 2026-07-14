@@ -305,3 +305,54 @@ export async function createQuestionAndAddToList(
   revalidatePath('/', 'layout')
   return { success: true, questionId: targetQuestionId }
 }
+
+export async function updateQuestion(
+  questionId: string,
+  data: {
+    title: string
+    leetcode_number?: number | null
+    slug?: string | null
+    topic?: string | null
+    difficulty: 'Easy' | 'Medium' | 'Hard'
+    youtube_url?: string | null
+  }
+) {
+  const supabase = await createClient()
+  await getSafeUser() // Ensure authenticated
+
+  const { error } = await supabase
+    .from('questions')
+    .update({
+      title: data.title,
+      leetcode_number: data.leetcode_number || null,
+      slug: data.slug || null,
+      topic: data.topic || null,
+      difficulty: data.difficulty,
+      youtube_url: data.youtube_url || null,
+    })
+    .eq('id', questionId)
+
+  if (error) {
+    if (error.code === '23505') throw new Error('A question with this number already exists.')
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}
+
+export async function removeQuestionFromList(listId: string, questionId: string) {
+  const supabase = await createClient()
+  await getSafeUser() // Ensure authenticated
+
+  const { error } = await supabase
+    .from('list_questions')
+    .delete()
+    .eq('list_id', listId)
+    .eq('question_id', questionId)
+
+  if (error) throw new Error(error.message)
+
+  revalidatePath('/', 'layout')
+  return { success: true }
+}

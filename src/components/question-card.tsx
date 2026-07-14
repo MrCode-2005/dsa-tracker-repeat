@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { ExternalLink, CirclePlay, StickyNote, Bookmark, Check, Star, RotateCcw } from 'lucide-react'
+import { ExternalLink, CirclePlay, StickyNote, Bookmark, Check, Star, RotateCcw, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,26 +9,30 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision, cancelQuestionRevision } from '@/lib/actions/questions'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+import { EditQuestionDialog } from '@/components/edit-question-dialog'
+import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision, cancelQuestionRevision, removeQuestionFromList } from '@/lib/actions/questions'
 import { Input } from '@/components/ui/input'
 import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
 import { toast } from 'sonner'
 
 interface QuestionCardProps {
   question: QuestionWithProgress
+  listId?: string
   bookmarkFolders?: BookmarkFolder[]
   questionFolderIds?: string[]
   onUpdate?: () => void
   index?: number
 }
 
-export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds = [], onUpdate, index }: QuestionCardProps) {
+export function QuestionCard({ question, listId, bookmarkFolders = [], questionFolderIds = [], onUpdate, index }: QuestionCardProps) {
   const [isSolved, setIsSolved] = useState(question.progress?.status === 'solved')
   const [animateSolve, setAnimateSolve] = useState(false)
   const [noteText, setNoteText] = useState(question.progress?.note || '')
   const [newFolderName, setNewFolderName] = useState('')
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [isSavingRevision, setIsSavingRevision] = useState(false)
+  const [isEditOpen, setIsEditOpen] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const difficultyClass = question.difficulty === 'Easy'
@@ -117,8 +121,21 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
     }
   }, [newFolderName, question.id, onUpdate])
 
+  const handleRemoveFromList = useCallback(async () => {
+    if (!listId) return
+    if (!confirm('Remove this question from the list?')) return
+    try {
+      await removeQuestionFromList(listId, question.id)
+      toast.success('Question removed')
+      onUpdate?.()
+    } catch (e: any) {
+      toast.error(e.message || 'Failed to remove')
+    }
+  }, [listId, question.id, onUpdate])
+
   return (
-    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_72px_36px_80px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
+    <>
+    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_72px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
       
       {/* 1. Problem Column */}
       <div className="flex items-center gap-3 min-w-0">
@@ -368,7 +385,39 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
           </Badge>
         </div>
 
+        {/* 9. More Options */}
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" />}>
+              <MoreHorizontal className="w-[18px] h-[18px]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
+              <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer">
+                <Pencil className="w-4 h-4 mr-2" />
+                Edit Question
+              </DropdownMenuItem>
+              {listId && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" onClick={handleRemoveFromList}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Remove from List
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
       </div>
     </div>
+    
+    <EditQuestionDialog 
+      open={isEditOpen}
+      onOpenChange={setIsEditOpen}
+      question={question as any}
+      onSuccess={onUpdate}
+    />
+    </>
   )
 }
