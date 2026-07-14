@@ -57,6 +57,17 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
     queryFn: getBookmarkFolders,
   })
 
+  const topicCounts = Array.from(
+    (allQuestions || []).reduce((acc, q) => {
+      if (q.topic) {
+        acc.set(q.topic, (acc.get(q.topic) || 0) + 1)
+      }
+      return acc
+    }, new Map<string, number>()).entries()
+  )
+    .map(([topic, count]) => ({ topic, count }))
+    .sort((a, b) => b.count - a.count)
+
   const solvedCount = allQuestions?.filter(q => q.progress?.status === 'solved').length || 0
   const totalCount = allQuestions?.length || 0
   const pct = totalCount > 0 ? Math.round((solvedCount / totalCount) * 100) : 0
@@ -68,49 +79,41 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
 
   const handleRandomPick = useCallback(() => {
     if (!questions || questions.length === 0) return
-    const random = questions[Math.floor(Math.random() * questions.length)]
-    setHighlightedId(random.id)
-    const el = document.getElementById(`question-${random.id}`)
-    el?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const randomQ = questions[Math.floor(Math.random() * questions.length)]
+    setHighlightedId(randomQ.id)
+    setTimeout(() => {
+      document.getElementById(`question-${randomQ.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 100)
     setTimeout(() => setHighlightedId(null), 3000)
   }, [questions])
 
-  const handleDeleteList = async () => {
-    if (!confirm('Delete this list? This cannot be undone.')) return
-    try {
-      await deleteList(listId)
-      toast.success('List deleted')
-      router.push('/lists')
-    } catch {
-      toast.error('Failed to delete list')
-    }
-  }
-
   return (
-    <div className="space-y-6 animate-in-up">
+    <div className="space-y-6 animate-in-up pb-20">
       {/* Header */}
-      <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" render={<Link href="/lists" />} nativeButton={false} className="shrink-0">
+      <div>
+        <div className="flex items-center gap-4 mb-2">
+          <Button variant="ghost" size="icon" className="h-8 w-8" render={<Link href="/lists" />} nativeButton={false}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{listDetails?.name || 'Loading...'}</h1>
-            {listDetails?.description && (
-              <p className="text-sm text-muted-foreground mt-0.5">{listDetails.description}</p>
-            )}
-          </div>
+          <h1 className="text-2xl font-bold flex-1">{listDetails?.name || 'Loading...'}</h1>
+          <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={async () => {
+            if (confirm('Delete this list?')) {
+              await deleteList(listId)
+              toast.success('List deleted')
+              router.push('/lists')
+            }
+          }}>
+            <Trash2 className="w-4 h-4" />
+          </Button>
         </div>
-        <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-destructive" onClick={handleDeleteList}>
-          <Trash2 className="w-4 h-4" />
-        </Button>
+        <p className="text-muted-foreground ml-12">{listDetails?.description}</p>
       </div>
 
       {/* Progress */}
       <div className="space-y-2">
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Progress</span>
-          <span className="font-mono font-medium">{solvedCount}/{totalCount} <span className="text-muted-foreground">({pct}%)</span></span>
+          <span className="font-mono">{solvedCount}/{totalCount} <span className="text-muted-foreground ml-1">({pct}%)</span></span>
         </div>
         <Progress value={pct} className="h-2" />
       </div>
@@ -118,6 +121,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
       {/* Filters */}
       <FilterBar
         companies={companies || []}
+        topics={topicCounts}
         onRandomPick={handleRandomPick}
         totalCount={totalCount}
         filteredCount={questions?.length || 0}

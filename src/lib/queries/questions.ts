@@ -6,6 +6,7 @@ export interface QuestionFilters {
   status?: 'all' | 'solved' | 'unsolved'
   difficulty?: 'all' | 'Easy' | 'Medium' | 'Hard'
   companies?: string[]
+  topic?: string
 }
 
 export async function getListQuestions(
@@ -35,6 +36,10 @@ export async function getListQuestions(
 
   if (filters.difficulty && filters.difficulty !== 'all') {
     questionQuery = questionQuery.eq('difficulty', filters.difficulty)
+  }
+
+  if (filters.topic && filters.topic !== 'all') {
+    questionQuery = questionQuery.eq('topic', filters.topic)
   }
 
   if (filters.search) {
