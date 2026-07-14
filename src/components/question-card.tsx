@@ -159,23 +159,25 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
       <div className="flex items-center gap-1 opacity-60 group-hover:opacity-100 transition-opacity">
         {/* Revision button */}
         <Tooltip>
-          <TooltipTrigger>
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                'h-7 w-7',
-                question.current_revision
-                  ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'
-                  : 'text-muted-foreground/40 cursor-not-allowed'
-              )}
-              onClick={handleRevision}
-              disabled={!question.current_revision}
-              aria-label="Mark revision complete"
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-            </Button>
-          </TooltipTrigger>
+          <TooltipTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  'h-7 w-7',
+                  question.current_revision
+                    ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'
+                    : 'text-muted-foreground/40 cursor-not-allowed'
+                )}
+                onClick={handleRevision}
+                disabled={!question.current_revision}
+                aria-label="Mark revision complete"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+              </Button>
+            }
+          />
           <TooltipContent>
             {question.current_revision
               ? `Revision due (Day ${question.current_revision.cycle_stage})`
@@ -226,18 +228,22 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
         {/* Note button */}
         <Popover>
           <Tooltip>
-            <TooltipTrigger>
-              <PopoverTrigger>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn('h-7 w-7', noteText ? 'text-primary' : 'text-muted-foreground')}
-                  aria-label="Add note"
-                >
-                  <StickyNote className="w-3.5 h-3.5" />
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn('h-7 w-7', noteText ? 'text-primary' : 'text-muted-foreground')}
+                      aria-label="Add note"
+                    >
+                      <StickyNote className="w-3.5 h-3.5" />
+                    </Button>
+                  }
+                />
+              }
+            />
             <TooltipContent>{noteText ? 'View note' : 'Add note'}</TooltipContent>
           </Tooltip>
           <PopoverContent className="w-80 bg-popover border-border">
@@ -257,18 +263,22 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
         {/* Bookmark button */}
         <Popover>
           <Tooltip>
-            <TooltipTrigger>
-              <PopoverTrigger>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn('h-7 w-7', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground')}
-                  aria-label="Bookmark"
-                >
-                  <Bookmark className={cn('w-3.5 h-3.5', questionFolderIds.length > 0 && 'fill-current')} />
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <PopoverTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className={cn('h-7 w-7', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground')}
+                      aria-label="Bookmark"
+                    >
+                      <Bookmark className={cn('w-3.5 h-3.5', questionFolderIds.length > 0 && 'fill-current')} />
+                    </Button>
+                  }
+                />
+              }
+            />
             <TooltipContent>Bookmark</TooltipContent>
           </Tooltip>
           <PopoverContent className="w-64 bg-popover border-border">
