@@ -292,7 +292,7 @@ export async function createQuestionAndAddToList(
     .insert({
       list_id: listId,
       question_id: targetQuestionId,
-      position: Date.now(), // simple positioning
+      position: Math.floor(Date.now() / 1000), // convert to seconds to fit in postgres int32
     })
 
   if (lqError) {
