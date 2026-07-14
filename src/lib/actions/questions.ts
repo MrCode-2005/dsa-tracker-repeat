@@ -204,7 +204,7 @@ export async function scheduleQuestionRevision(questionId: string) {
   const { error } = await supabase.from('revision_schedule').insert({
     user_id: user.id,
     question_id: questionId,
-    scheduled_date: scheduledDate.toISOString().split('T')[0],
+    scheduled_for: scheduledDate.toISOString().split('T')[0],
     cycle_stage: nextStage,
   })
 

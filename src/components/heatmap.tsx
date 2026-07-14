@@ -125,19 +125,21 @@ export function CalendarHeatmap({ data, year }: CalendarHeatmapProps) {
         {/* Cells */}
         {cells.map((cell, i) => (
           <Tooltip key={i}>
-            <TooltipTrigger>
-              <rect
-                x={30 + cell.col * 14}
-                y={18 + cell.row * 14}
-                width={11}
-                height={11}
-                rx={2}
-                ry={2}
-                fill={cell.isCurrentYear ? getColor(cell.count) : 'transparent'}
-                className="transition-colors duration-100 hover:stroke-foreground/30"
-                strokeWidth={cell.isCurrentYear ? 0 : 0}
-              />
-            </TooltipTrigger>
+            <TooltipTrigger
+              render={
+                <rect
+                  x={30 + cell.col * 14}
+                  y={18 + cell.row * 14}
+                  width={11}
+                  height={11}
+                  rx={2}
+                  ry={2}
+                  fill={cell.isCurrentYear ? getColor(cell.count) : 'transparent'}
+                  className="transition-colors duration-100 hover:stroke-foreground/30 focus:outline-none cursor-pointer"
+                  strokeWidth={cell.isCurrentYear ? 0 : 0}
+                />
+              }
+            />
             {cell.isCurrentYear && (
               <TooltipContent side="top" className="text-xs">
                 <div className="font-medium">

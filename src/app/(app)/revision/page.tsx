@@ -113,19 +113,23 @@ export default function RevisionPage() {
           ) : revisions?.due && revisions.due.length > 0 ? (
             <div className="space-y-2">
               {revisions.due.map((r) => (
-                <div key={r.id} className="relative">
-                  <span className="absolute -left-0 top-3 text-[10px] font-mono text-muted-foreground hidden sm:block" style={{ transform: 'translateX(-100%) translateX(-8px)' }}>
-                    Day {r.cycle_stage}
-                  </span>
-                  <QuestionCard
-                    question={{
-                      ...r.question,
-                      progress: r.progress,
-                      revision_count: { completed: 0, total: 4 },
-                      current_revision: r,
-                    }}
-                    onUpdate={handleRefresh}
-                  />
+                <div key={r.id} className="flex flex-col sm:flex-row sm:items-center gap-2">
+                  <div className="hidden sm:block w-12 flex-shrink-0 text-right pr-2">
+                    <span className="text-[10px] font-mono text-muted-foreground">
+                      Day {r.cycle_stage}
+                    </span>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <QuestionCard
+                      question={{
+                        ...r.question,
+                        progress: r.progress,
+                        revision_count: { completed: 0, total: 4 },
+                        current_revision: r,
+                      }}
+                      onUpdate={handleRefresh}
+                    />
+                  </div>
                 </div>
               ))}
             </div>
