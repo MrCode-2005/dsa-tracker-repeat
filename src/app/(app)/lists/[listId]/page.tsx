@@ -31,6 +31,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
     status: (searchParams.get('status') as QuestionFilters['status']) || 'all',
     difficulty: (searchParams.get('difficulty') as QuestionFilters['difficulty']) || 'all',
     companies: searchParams.get('companies')?.split(',').filter(Boolean) || [],
+    topic: searchParams.get('topic') || 'all',
   }
 
   const { data: listDetails } = useQuery({
