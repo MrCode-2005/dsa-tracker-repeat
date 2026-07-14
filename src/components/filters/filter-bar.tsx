@@ -122,13 +122,13 @@ export function FilterBar({ companies = [], topics = [], onRandomPick, totalCoun
               <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
               <SelectValue placeholder="Topic" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="min-w-[240px]">
               <SelectItem value="all">All Topics</SelectItem>
               {topics.map(t => (
                 <SelectItem key={t.topic} value={t.topic}>
-                  <div className="flex items-center justify-between w-full pr-2 gap-4">
-                    <span>{t.topic}</span>
-                    <span className="text-xs text-muted-foreground">({t.count})</span>
+                  <div className="flex items-center justify-between w-full gap-4">
+                    <span className="truncate">{t.topic}</span>
+                    <span className="text-xs text-muted-foreground tabular-nums shrink-0">({t.count})</span>
                   </div>
                 </SelectItem>
               ))}
