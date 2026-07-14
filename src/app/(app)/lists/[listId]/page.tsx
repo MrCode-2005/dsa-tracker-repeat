@@ -160,7 +160,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
               >
                 <QuestionCard
                   question={q}
-                  listId={listDetails?.source_type === 'custom' ? listId : undefined}
+                  listId={listId}
                   bookmarkFolders={bookmarkFolders || []}
                   onUpdate={handleRefresh}
                   index={idx + 1}
