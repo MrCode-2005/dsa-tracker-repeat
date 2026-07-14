@@ -124,251 +124,262 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
   const hasRevisionScheduled = (question.revision_count?.total || 0) > 0
 
   return (
-    <div className="group flex items-center gap-3 px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
-      {/* Row index number */}
-      {index !== undefined && (
-        <span className="flex-shrink-0 font-mono text-xs text-muted-foreground/50 w-6 text-right select-none">
-          {index}
+    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_72px_36px_80px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
+      
+      {/* 1. Problem Column */}
+      <div className="flex items-center gap-3 min-w-0">
+        {/* Row index number */}
+        {index !== undefined && (
+          <span className="flex-shrink-0 font-mono text-xs text-muted-foreground/50 w-5 text-right select-none">
+            {index}.
+          </span>
+        )}
+        {/* LeetCode question number */}
+        {question.leetcode_number && (
+          <span className="flex-shrink-0 font-mono text-xs font-semibold text-muted-foreground/60">
+            {question.leetcode_number}
+          </span>
+        )}
+        {/* Title */}
+        <span className={cn(
+          'text-sm font-medium truncate',
+          isSolved && 'text-muted-foreground line-through decoration-muted-foreground/30'
+        )}>
+          {question.title}
         </span>
-      )}
+        {/* Topic badge */}
+        {question.topic && (
+          <span className="hidden lg:inline-flex text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md truncate max-w-32 flex-shrink-0">
+            {question.topic}
+          </span>
+        )}
+      </div>
 
-      {/* Done checkbox */}
-      <div className={cn('flex-shrink-0', animateSolve && 'solve-animation')}>
-        <Checkbox
-          checked={isSolved}
-          onCheckedChange={handleToggleSolved}
-          className={cn(
-            'w-5 h-5 rounded-full transition-colors',
-            isSolved && 'bg-emerald-500 border-emerald-500 text-white'
+      {/* Action Columns - Desktop Grid / Mobile Flex */}
+      <div className="flex items-center gap-2 md:contents">
+        
+        {/* 2. Video */}
+        <div className="flex justify-center">
+          {question.youtube_url ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <a
+                    href={question.youtube_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label="Watch NeetCode solution video"
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
+                  />
+                }
+              >
+                <CirclePlay className="w-[18px] h-[18px]" />
+              </TooltipTrigger>
+              <TooltipContent>Watch NeetCode solution</TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="w-8 h-8" />
           )}
-          aria-label={`Mark ${question.title} as ${isSolved ? 'unsolved' : 'solved'}`}
-        />
-      </div>
+        </div>
 
-      {/* LeetCode question number */}
-      {question.leetcode_number && (
-        <span className="flex-shrink-0 font-mono text-sm text-muted-foreground/60 w-8 text-right">
-          {question.leetcode_number}
-        </span>
-      )}
-
-      {/* Title */}
-      <span className={cn(
-        'flex-1 text-sm font-medium truncate',
-        isSolved && 'text-muted-foreground line-through decoration-muted-foreground/30'
-      )}>
-        {question.title}
-      </span>
-
-      {/* Topic badge */}
-      {question.topic && (
-        <span className="hidden lg:inline-flex text-xs text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md truncate max-w-36 flex-shrink-0">
-          {question.topic}
-        </span>
-      )}
-
-      {/* Revision count */}
-      {(question.revision_count?.total || 0) > 0 && (
-        <span className="hidden sm:inline-flex text-xs font-mono text-muted-foreground flex-shrink-0">
-          {question.revision_count.completed}/{question.revision_count.total}
-        </span>
-      )}
-
-      {/* Action buttons — evenly spaced */}
-      <div className="flex items-center gap-2 ml-2">
-        {/* Mark revision done */}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  'h-8 w-8 rounded-lg',
-                  question.current_revision
-                    ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'
-                    : 'text-muted-foreground/30 cursor-not-allowed'
-                )}
-                onClick={handleRevision}
-                disabled={!question.current_revision}
-                aria-label="Mark revision complete"
+        {/* 3. Code (LeetCode) */}
+        <div className="flex justify-center">
+          {question.slug ? (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <a
+                    href={`https://leetcode.com/problems/${question.slug}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Solve ${question.title} on LeetCode`}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 transition-colors"
+                  />
+                }
               >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
-            }
-          />
-          <TooltipContent>
-            {question.current_revision
-              ? `Revision due (Day ${question.current_revision.cycle_stage})`
-              : 'No revision due'}
-          </TooltipContent>
-        </Tooltip>
+                <ExternalLink className="w-[18px] h-[18px]" />
+              </TooltipTrigger>
+              <TooltipContent>Open on LeetCode</TooltipContent>
+            </Tooltip>
+          ) : (
+            <div className="w-8 h-8" />
+          )}
+        </div>
 
-        {/* LeetCode solve link */}
-        {question.slug && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <a
-                  href={`https://leetcode.com/problems/${question.slug}/`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Solve ${question.title} on LeetCode`}
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                />
-              }
-            >
-              <ExternalLink className="w-4 h-4" />
-            </TooltipTrigger>
-            <TooltipContent>Open on LeetCode</TooltipContent>
-          </Tooltip>
-        )}
-
-        {/* YouTube video solution */}
-        {question.youtube_url && (
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <a
-                  href={question.youtube_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Watch NeetCode solution video"
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
-                />
-              }
-            >
-              <CirclePlay className="w-4 h-4" />
-            </TooltipTrigger>
-            <TooltipContent>Watch NeetCode solution</TooltipContent>
-          </Tooltip>
-        )}
-
-        {/* Save to revision */}
-        <Tooltip>
-          <TooltipTrigger
-            render={
-              <Button
-                variant="ghost"
-                size="icon"
-                className={cn(
-                  'h-8 w-8 rounded-lg transition-colors',
-                  hasRevisionScheduled
-                    ? 'text-violet-400 hover:text-violet-300 hover:bg-violet-400/10'
-                    : 'text-muted-foreground/50 hover:text-violet-400 hover:bg-violet-400/10'
-                )}
-                onClick={handleSaveToRevision}
-                disabled={isSavingRevision}
-                aria-label="Save to revision schedule"
-              >
-                <Star className={cn('w-4 h-4', hasRevisionScheduled && 'fill-current')} />
-              </Button>
-            }
-          />
-          <TooltipContent>{hasRevisionScheduled ? 'Saved to revision' : 'Save to revision'}</TooltipContent>
-        </Tooltip>
-
-        {/* Note button */}
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <PopoverTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn('h-8 w-8 rounded-lg', noteText ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
-                      aria-label="Add note"
-                    >
-                      <StickyNote className="w-4 h-4" />
-                    </Button>
-                  }
-                />
-              }
-            />
-            <TooltipContent>{noteText ? 'View note' : 'Add note'}</TooltipContent>
-          </Tooltip>
-          <PopoverContent className="w-80 bg-popover border-border">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Notes</label>
-              <Textarea
-                placeholder="Add your notes here..."
-                value={noteText}
-                onChange={(e) => handleNoteChange(e.target.value)}
-                className="min-h-24 bg-background/50 text-sm"
+        {/* 4. Notes */}
+        <div className="flex justify-center">
+          <Popover>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn('h-8 w-8 rounded-lg', noteText ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
+                        aria-label="Add note"
+                      >
+                        <StickyNote className="w-[18px] h-[18px]" />
+                      </Button>
+                    }
+                  />
+                }
               />
-              <p className="text-xs text-muted-foreground">Auto-saved after you stop typing</p>
-            </div>
-          </PopoverContent>
-        </Popover>
+              <TooltipContent>{noteText ? 'View note' : 'Add note'}</TooltipContent>
+            </Tooltip>
+            <PopoverContent className="w-80 bg-popover border-border">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Notes</label>
+                <Textarea
+                  placeholder="Add your notes here..."
+                  value={noteText}
+                  onChange={(e) => handleNoteChange(e.target.value)}
+                  className="min-h-24 bg-background/50 text-sm"
+                />
+                <p className="text-xs text-muted-foreground">Auto-saved after you stop typing</p>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
 
-        {/* Bookmark button */}
-        <Popover>
+        {/* 5. Bookmark */}
+        <div className="flex justify-center">
+          <Popover>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn('h-8 w-8 rounded-lg', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
+                        aria-label="Bookmark"
+                      >
+                        <Bookmark className={cn('w-[18px] h-[18px]', questionFolderIds.length > 0 && 'fill-current')} />
+                      </Button>
+                    }
+                  />
+                }
+              />
+              <TooltipContent>Bookmark</TooltipContent>
+            </Tooltip>
+            <PopoverContent className="w-64 bg-popover border-border">
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Bookmark Folders</label>
+                {bookmarkFolders.length === 0 && (
+                  <p className="text-xs text-muted-foreground">No folders yet</p>
+                )}
+                {bookmarkFolders.map((folder) => (
+                  <button
+                    key={folder.id}
+                    onClick={() => handleToggleBookmark(folder.id)}
+                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors text-left"
+                  >
+                    <span>{folder.emoji || '📌'}</span>
+                    <span className="flex-1 truncate">{folder.name}</span>
+                    {questionFolderIds.includes(folder.id) && (
+                      <Check className="w-3.5 h-3.5 text-primary" />
+                    )}
+                  </button>
+                ))}
+                <div className="pt-2 border-t border-border flex gap-2">
+                  <Input
+                    placeholder="New folder name"
+                    value={newFolderName}
+                    onChange={(e) => setNewFolderName(e.target.value)}
+                    className="h-8 text-sm"
+                    onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                  />
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs"
+                    onClick={handleCreateFolder}
+                    disabled={isCreatingFolder || !newFolderName.trim()}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* 6. Review (Spaced Repetition) */}
+        <div className="flex items-center justify-center gap-1">
           <Tooltip>
             <TooltipTrigger
               render={
-                <PopoverTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className={cn('h-8 w-8 rounded-lg', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
-                      aria-label="Bookmark"
-                    >
-                      <Bookmark className={cn('w-4 h-4', questionFolderIds.length > 0 && 'fill-current')} />
-                    </Button>
-                  }
-                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'h-8 w-8 rounded-lg transition-colors',
+                    hasRevisionScheduled
+                      ? 'text-violet-400 hover:text-violet-300 hover:bg-violet-400/10'
+                      : 'text-muted-foreground/50 hover:text-violet-400 hover:bg-violet-400/10'
+                  )}
+                  onClick={handleSaveToRevision}
+                  disabled={isSavingRevision}
+                  aria-label="Save to revision schedule"
+                >
+                  <Star className={cn('w-[18px] h-[18px]', hasRevisionScheduled && 'fill-current')} />
+                </Button>
               }
             />
-            <TooltipContent>Bookmark</TooltipContent>
+            <TooltipContent>{hasRevisionScheduled ? 'Saved to revision' : 'Save to revision'}</TooltipContent>
           </Tooltip>
-          <PopoverContent className="w-64 bg-popover border-border">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Bookmark Folders</label>
-              {bookmarkFolders.length === 0 && (
-                <p className="text-xs text-muted-foreground">No folders yet</p>
-              )}
-              {bookmarkFolders.map((folder) => (
-                <button
-                  key={folder.id}
-                  onClick={() => handleToggleBookmark(folder.id)}
-                  className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors text-left"
-                >
-                  <span>{folder.emoji || '📌'}</span>
-                  <span className="flex-1 truncate">{folder.name}</span>
-                  {questionFolderIds.includes(folder.id) && (
-                    <Check className="w-3.5 h-3.5 text-primary" />
-                  )}
-                </button>
-              ))}
-              <div className="pt-2 border-t border-border flex gap-2">
-                <Input
-                  placeholder="New folder name"
-                  value={newFolderName}
-                  onChange={(e) => setNewFolderName(e.target.value)}
-                  className="h-8 text-sm"
-                  onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                />
-                <Button
-                  size="sm"
-                  className="h-8 text-xs"
-                  onClick={handleCreateFolder}
-                  disabled={isCreatingFolder || !newFolderName.trim()}
-                >
-                  Add
-                </Button>
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
-      </div>
 
-      {/* Difficulty badge — always at the very end */}
-      <Badge variant="outline" className={cn('flex-shrink-0 text-xs font-medium ml-1', difficultyClass)}>
-        {question.difficulty}
-      </Badge>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn(
+                    'h-8 w-8 rounded-lg',
+                    question.current_revision
+                      ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'
+                      : 'text-muted-foreground/30 cursor-not-allowed'
+                  )}
+                  onClick={handleRevision}
+                  disabled={!question.current_revision}
+                  aria-label="Mark revision complete"
+                >
+                  <RotateCcw className="w-[18px] h-[18px]" />
+                </Button>
+              }
+            />
+            <TooltipContent>
+              {question.current_revision
+                ? `Revision due (Day ${question.current_revision.cycle_stage})`
+                : 'No revision due'}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+
+        {/* 7. Done */}
+        <div className={cn('flex justify-center', animateSolve && 'solve-animation')}>
+          <Checkbox
+            checked={isSolved}
+            onCheckedChange={handleToggleSolved}
+            className={cn(
+              'w-[22px] h-[22px] rounded-md transition-colors data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500 data-[state=checked]:text-white',
+              !isSolved && 'border-muted-foreground/50'
+            )}
+            aria-label={`Mark ${question.title} as ${isSolved ? 'unsolved' : 'solved'}`}
+          />
+        </div>
+
+        {/* 8. Difficulty */}
+        <div className="flex justify-end md:justify-center">
+          <Badge variant="outline" className={cn('text-[11px] px-2 py-0.5 font-medium', difficultyClass)}>
+            {question.difficulty}
+          </Badge>
+        </div>
+
+      </div>
     </div>
   )
 }
