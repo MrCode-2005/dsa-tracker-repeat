@@ -53,7 +53,7 @@ export async function signInWithGoogle() {
   })
 
   if (error) throw error
-  if (data.url) redirect(data.url)
+  return { url: data.url }
 }
 
 export async function signOut() {
