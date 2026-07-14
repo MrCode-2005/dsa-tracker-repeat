@@ -154,50 +154,42 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
         
         {/* 2. Video */}
         <div className="flex justify-center">
-          {question.youtube_url ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <a
-                    href={question.youtube_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label="Watch NeetCode solution video"
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
-                  />
-                }
-              >
-                <CirclePlay className="w-[18px] h-[18px]" />
-              </TooltipTrigger>
-              <TooltipContent>Watch NeetCode solution</TooltipContent>
-            </Tooltip>
-          ) : (
-            <div className="w-8 h-8" />
-          )}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href={question.youtube_url || `https://www.youtube.com/results?search_query=${encodeURIComponent(question.title + ' leetcode solution')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Watch solution video"
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
+                />
+              }
+            >
+              <CirclePlay className="w-[18px] h-[18px]" />
+            </TooltipTrigger>
+            <TooltipContent>Watch solution</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* 3. Code (LeetCode) */}
         <div className="flex justify-center">
-          {question.slug ? (
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <a
-                    href={`https://leetcode.com/problems/${question.slug}/`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Solve ${question.title} on LeetCode`}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 transition-colors"
-                  />
-                }
-              >
-                <ExternalLink className="w-[18px] h-[18px]" />
-              </TooltipTrigger>
-              <TooltipContent>Open on LeetCode</TooltipContent>
-            </Tooltip>
-          ) : (
-            <div className="w-8 h-8" />
-          )}
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <a
+                  href={question.slug ? `https://leetcode.com/problems/${question.slug}/` : `https://leetcode.com/problems/${question.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}/`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Solve ${question.title} on LeetCode`}
+                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-blue-400/10 transition-colors"
+                />
+              }
+            >
+              <ExternalLink className="w-[18px] h-[18px]" />
+            </TooltipTrigger>
+            <TooltipContent>Open on LeetCode</TooltipContent>
+          </Tooltip>
         </div>
 
         {/* 4. Notes */}
