@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 import { revalidatePath } from 'next/cache'
+import { headers } from 'next/headers'
 
 export async function signUp(email: string, password: string, displayName?: string) {
   const supabase = await createClient()
@@ -38,17 +39,15 @@ export async function signIn(email: string, password: string) {
 export async function signInWithGoogle() {
   const supabase = await createClient()
 
-  const siteUrl = 
-    process.env.NEXT_PUBLIC_SITE_URL || 
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null) ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null) || 
-    (process.env.NEXT_PUBLIC_VERCEL_URL ? `https://${process.env.NEXT_PUBLIC_VERCEL_URL}` : null) ||
-    'http://localhost:3000'
+  const headersList = await headers()
+  const host = headersList.get('host')
+  const protocol = headersList.get('x-forwarded-proto') || 'http'
+  const origin = host ? `${protocol}://${host}` : 'http://localhost:3000'
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${siteUrl}/auth/callback`,
+      redirectTo: `${origin}/auth/callback`,
     },
   })
 
