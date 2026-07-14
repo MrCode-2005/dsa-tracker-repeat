@@ -22,6 +22,7 @@ const CHART_COLORS = ['#8b5cf6', '#10b981', '#f59e0b', '#ef4444', '#3b82f6', '#e
 
 export default function AnalyticsPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
+  const [selectedYear, setSelectedYear] = useState('current')
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -64,15 +65,12 @@ export default function AnalyticsPage() {
         {activityLoading ? <HeatmapSkeleton /> : (
           <Card className="bg-card/50 border-border">
             <CardContent className="p-6">
-              <h3 className="text-sm font-semibold mb-4">Activity Heatmap — {new Date().getFullYear()}</h3>
-              <CalendarHeatmap data={activity || []} />
-              <div className="flex items-center gap-2 mt-3 text-xs text-muted-foreground">
-                <span>Less</span>
-                {[0, 1, 2, 3, 4].map(level => (
-                  <div key={level} className="w-3 h-3 rounded-sm" style={{ backgroundColor: `var(--color-heatmap-${level})` }} />
-                ))}
-                <span>More</span>
-              </div>
+              <CalendarHeatmap 
+                data={activity || []} 
+                year={selectedYear}
+                onYearChange={setSelectedYear}
+                years={['current', new Date().getFullYear().toString(), (new Date().getFullYear() - 1).toString()]}
+              />
             </CardContent>
           </Card>
         )}

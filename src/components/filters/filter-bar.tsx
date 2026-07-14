@@ -67,93 +67,113 @@ export function FilterBar({ companies = [], topics = [], onRandomPick, totalCoun
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex flex-wrap items-end gap-2">
+        
+        {/* Search */}
         <div className="relative flex-1 min-w-[200px] max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search by name or # number..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9 h-9 bg-card/50 border-border"
-          />
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Search</label>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="Search by name or # number..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 bg-card/50 border-border"
+            />
+          </div>
         </div>
 
         {/* Status Filter */}
-        <Select value={currentFilters.status || 'all'} onValueChange={(v) => updateFilter('status', v ?? 'all')}>
-          <SelectTrigger className="w-[120px] h-9 bg-card/50">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            <SelectItem value="unsolved">Unsolved</SelectItem>
-            <SelectItem value="solved">Solved</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Difficulty Filter */}
-        <Select value={currentFilters.difficulty || 'all'} onValueChange={(v) => updateFilter('difficulty', v ?? 'all')}>
-          <SelectTrigger className="w-[120px] h-9 bg-card/50">
-            <SelectValue placeholder="Difficulty" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Difficulty</SelectItem>
-            <SelectItem value="Easy">Easy</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="Hard">Hard</SelectItem>
-          </SelectContent>
-        </Select>
-
-        {/* Topic Filter */}
-        <Select value={currentFilters.topic || 'all'} onValueChange={(v) => updateFilter('topic', v ?? 'all')}>
-          <SelectTrigger className="w-[180px] h-9 bg-card/50">
-            <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
-            <SelectValue placeholder="Topic" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Topics</SelectItem>
-            {topics.map(t => (
-              <SelectItem key={t.topic} value={t.topic}>
-                <div className="flex items-center justify-between w-full pr-2 gap-4">
-                  <span>{t.topic}</span>
-                  <span className="text-xs text-muted-foreground">({t.count})</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Company filter */}
-        {companies.length > 0 && (
-          <Select
-            value={currentFilters.companies?.[0] || 'all'}
-            onValueChange={(v) => updateFilter('companies', v ?? 'all')}
-          >
-            <SelectTrigger className="w-36 h-9 bg-background/50">
-              <Filter className="w-3.5 h-3.5 mr-1.5" />
-              <SelectValue placeholder="Company" />
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Status</label>
+          <Select value={currentFilters.status || 'all'} onValueChange={(v) => updateFilter('status', v ?? 'all')}>
+            <SelectTrigger className="w-[120px] h-9 bg-card/50">
+              <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Companies</SelectItem>
-              {companies.map(c => (
-                <SelectItem key={c} value={c}>{c}</SelectItem>
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="unsolved">Unsolved</SelectItem>
+              <SelectItem value="solved">Solved</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Difficulty Filter */}
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Difficulty</label>
+          <Select value={currentFilters.difficulty || 'all'} onValueChange={(v) => updateFilter('difficulty', v ?? 'all')}>
+            <SelectTrigger className="w-[120px] h-9 bg-card/50">
+              <SelectValue placeholder="Difficulty" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Difficulty</SelectItem>
+              <SelectItem value="Easy">Easy</SelectItem>
+              <SelectItem value="Medium">Medium</SelectItem>
+              <SelectItem value="Hard">Hard</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Topic Filter */}
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Topics</label>
+          <Select value={currentFilters.topic || 'all'} onValueChange={(v) => updateFilter('topic', v ?? 'all')}>
+            <SelectTrigger className="w-[180px] h-9 bg-card/50">
+              <Filter className="w-3.5 h-3.5 mr-2 text-muted-foreground" />
+              <SelectValue placeholder="Topic" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Topics</SelectItem>
+              {topics.map(t => (
+                <SelectItem key={t.topic} value={t.topic}>
+                  <div className="flex items-center justify-between w-full pr-2 gap-4">
+                    <span>{t.topic}</span>
+                    <span className="text-xs text-muted-foreground">({t.count})</span>
+                  </div>
+                </SelectItem>
               ))}
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Company filter */}
+        {companies.length > 0 && (
+          <div>
+            <label className="block text-xs font-medium text-muted-foreground mb-1.5 ml-1">Companies</label>
+            <Select
+              value={currentFilters.companies?.[0] || 'all'}
+              onValueChange={(v) => updateFilter('companies', v ?? 'all')}
+            >
+              <SelectTrigger className="w-[140px] h-9 bg-card/50">
+                <SelectValue placeholder="Company" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Companies</SelectItem>
+                {companies.map(c => (
+                  <SelectItem key={c} value={c}>{c}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         )}
 
-        {/* Random button */}
-        <Button variant="outline" size="sm" className="h-9 gap-1.5" onClick={onRandomPick}>
-          <Shuffle className="w-3.5 h-3.5" />
-          Random
-        </Button>
+        <div className="flex items-center gap-2 mb-[1px]">
+          {/* Random pick */}
+          {onRandomPick && (
+            <Button variant="outline" size="sm" className="h-9 border-border bg-card/50" onClick={onRandomPick}>
+              <Shuffle className="w-3.5 h-3.5 mr-2" />
+              Random
+            </Button>
+          )}
 
-        {/* Clear filters */}
-        {activeFiltersCount > 0 && (
-          <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={clearAllFilters}>
-            <X className="w-3.5 h-3.5 mr-1" />
-            Clear
-          </Button>
-        )}
+          {/* Clear filters */}
+          {activeFiltersCount > 0 && (
+            <Button variant="ghost" size="sm" className="h-9 text-muted-foreground" onClick={clearAllFilters}>
+              <X className="w-3.5 h-3.5 mr-1" />
+              Clear
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Results count */}
