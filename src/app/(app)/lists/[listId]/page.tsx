@@ -15,6 +15,7 @@ import { getListQuestions, getAllCompanies, type QuestionFilters } from '@/lib/q
 import { getListDetails } from '@/lib/queries/lists'
 import { getBookmarkFolders } from '@/lib/queries/bookmarks'
 import { deleteList } from '@/lib/actions/lists'
+import { AddQuestionDialog } from './add-question-dialog'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 
@@ -96,6 +97,11 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <h1 className="text-2xl font-bold flex-1">{listDetails?.name || 'Loading...'}</h1>
+          
+          {listDetails?.source_type === 'custom' && (
+            <AddQuestionDialog listId={listId} onSuccess={handleRefresh} />
+          )}
+
           <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={async () => {
             if (confirm('Delete this list?')) {
               await deleteList(listId)

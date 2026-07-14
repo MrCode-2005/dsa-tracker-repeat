@@ -225,3 +225,48 @@ export async function cancelQuestionRevision(questionId: string) {
   if (error) throw error
   revalidatePath('/', 'layout')
 }
+
+export async function createQuestionAndAddToList(
+  listId: string,
+  data: {
+    title: string
+    leetcode_number?: number
+    slug?: string
+    topic?: string
+    difficulty: 'Easy' | 'Medium' | 'Hard'
+    youtube_url?: string
+  }
+) {
+  const supabase = await createClient()
+  await getSafeUser() // Ensure authenticated
+
+  // 1. Insert into questions
+  const { data: newQuestion, error: qError } = await supabase
+    .from('questions')
+    .insert({
+      title: data.title,
+      leetcode_number: data.leetcode_number || null,
+      slug: data.slug || null,
+      topic: data.topic || null,
+      difficulty: data.difficulty,
+      youtube_url: data.youtube_url || null,
+    })
+    .select('id')
+    .single()
+
+  if (qError) throw new Error(qError.message)
+
+  // 2. Add to list
+  const { error: lqError } = await supabase
+    .from('list_questions')
+    .insert({
+      list_id: listId,
+      question_id: newQuestion.id,
+      position: Date.now(), // simple positioning
+    })
+
+  if (lqError) throw new Error(lqError.message)
+
+  revalidatePath('/', 'layout')
+  return { success: true, questionId: newQuestion.id }
+}
