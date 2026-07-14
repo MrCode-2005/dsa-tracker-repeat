@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { PRESET_LISTS } from '@/lib/types/database'
+import { resolveLeetCodeData } from '@/lib/leetcode-api'
 
 export async function createList(name: string, description?: string, color?: string) {
   const supabase = await createClient()
@@ -131,6 +132,14 @@ export async function importListFromData(
   // Upsert questions into the master bank
   for (let i = 0; i < questions.length; i++) {
     const q = questions[i]
+
+    // Auto-resolve missing metadata
+    const resolved = await resolveLeetCodeData(q.title)
+    if (resolved) {
+      q.difficulty = q.difficulty || resolved.difficulty
+      q.leetcode_number = q.leetcode_number || resolved.leetcode_number
+      q.slug = q.slug || resolved.slug
+    }
 
     // Try to find existing question by leetcode_number
     let questionId: string | null = null
