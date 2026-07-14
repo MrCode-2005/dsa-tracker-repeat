@@ -240,33 +240,68 @@ export async function createQuestionAndAddToList(
   const supabase = await createClient()
   await getSafeUser() // Ensure authenticated
 
-  // 1. Insert into questions
-  const { data: newQuestion, error: qError } = await supabase
-    .from('questions')
-    .insert({
-      title: data.title,
-      leetcode_number: data.leetcode_number || null,
-      slug: data.slug || null,
-      topic: data.topic || null,
-      difficulty: data.difficulty,
-      youtube_url: data.youtube_url || null,
-    })
-    .select('id')
-    .single()
+  let targetQuestionId: string | null = null
 
-  if (qError) throw new Error(qError.message)
+  // 1. Check if the question already exists by leetcode_number
+  if (data.leetcode_number) {
+    const { data: existing } = await supabase
+      .from('questions')
+      .select('id')
+      .eq('leetcode_number', data.leetcode_number)
+      .limit(1)
+      .maybeSingle()
+    if (existing) targetQuestionId = existing.id
+  }
 
-  // 2. Add to list
+  // 2. Check if the question already exists by exact title (case-insensitive)
+  if (!targetQuestionId) {
+    const { data: existing } = await supabase
+      .from('questions')
+      .select('id')
+      .ilike('title', data.title)
+      .limit(1)
+      .maybeSingle()
+    if (existing) targetQuestionId = existing.id
+  }
+
+  // 3. If we still don't have a question, insert a new one
+  if (!targetQuestionId) {
+    const { data: newQuestion, error: qError } = await supabase
+      .from('questions')
+      .insert({
+        title: data.title,
+        leetcode_number: data.leetcode_number || null,
+        slug: data.slug || null,
+        topic: data.topic || null,
+        difficulty: data.difficulty,
+        youtube_url: data.youtube_url || null,
+      })
+      .select('id')
+      .single()
+
+    if (qError) {
+      if (qError.code === '23505') throw new Error('A question with this number already exists.')
+      throw new Error(qError.message)
+    }
+    targetQuestionId = newQuestion.id
+  }
+
+  // 4. Add to list
   const { error: lqError } = await supabase
     .from('list_questions')
     .insert({
       list_id: listId,
-      question_id: newQuestion.id,
+      question_id: targetQuestionId,
       position: Date.now(), // simple positioning
     })
 
-  if (lqError) throw new Error(lqError.message)
+  if (lqError) {
+    if (lqError.code === '23505') {
+      throw new Error('This question is already inside this list!')
+    }
+    throw new Error(lqError.message)
+  }
 
   revalidatePath('/', 'layout')
-  return { success: true, questionId: newQuestion.id }
+  return { success: true, questionId: targetQuestionId }
 }
