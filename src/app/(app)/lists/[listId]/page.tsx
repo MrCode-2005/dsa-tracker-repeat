@@ -140,7 +140,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
         ) : questions && questions.length > 0 ? (
           <div className="space-y-2">
             {/* Header row for grid alignment */}
-            <div className="hidden md:grid grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_72px_36px_80px] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/50">
+            <div className="hidden md:grid grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_72px_36px_80px_36px] gap-4 px-4 py-2 text-xs font-medium text-muted-foreground border-b border-border/50">
               <div>Problem</div>
               <div className="text-center" title="Video Solution">Video</div>
               <div className="text-center" title="LeetCode">Code</div>
@@ -149,6 +149,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
               <div className="text-center" title="Spaced Repetition">Review</div>
               <div className="text-center" title="Mark Done">Done</div>
               <div className="text-center">Difficulty</div>
+              <div></div>
             </div>
 
             {questions.map((q, idx) => (
@@ -159,6 +160,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
               >
                 <QuestionCard
                   question={q}
+                  listId={listDetails?.source_type === 'custom' ? listId : undefined}
                   bookmarkFolders={bookmarkFolders || []}
                   onUpdate={handleRefresh}
                   index={idx + 1}
