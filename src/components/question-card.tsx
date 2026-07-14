@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { ExternalLink, CirclePlay, StickyNote, Bookmark, RotateCcw, Check, Star } from 'lucide-react'
+import { ExternalLink, CirclePlay, StickyNote, Bookmark, Check, Star, RotateCcw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { toggleQuestionSolved, markRevisionComplete, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision } from '@/lib/actions/questions'
+import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision, cancelQuestionRevision } from '@/lib/actions/questions'
 import { Input } from '@/components/ui/input'
 import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
 import { toast } from 'sonner'
@@ -54,29 +54,25 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
     }
   }, [isSolved, question.id, onUpdate])
 
-  const handleRevision = useCallback(async () => {
-    if (!question.current_revision) return
-    try {
-      await markRevisionComplete(question.current_revision.id, question.id)
-      onUpdate?.()
-      toast.success('Revision completed! 💪')
-    } catch {
-      toast.error('Failed to mark revision')
-    }
-  }, [question.current_revision, question.id, onUpdate])
+  const hasRevisionScheduled = (question.revision_count?.total || 0) > 0
 
   const handleSaveToRevision = useCallback(async () => {
     setIsSavingRevision(true)
     try {
-      await scheduleQuestionRevision(question.id)
+      if (hasRevisionScheduled) {
+        await cancelQuestionRevision(question.id)
+        toast.success('Removed from revision schedule')
+      } else {
+        await scheduleQuestionRevision(question.id)
+        toast.success('Saved to revision schedule! ⭐')
+      }
       onUpdate?.()
-      toast.success('Saved to revision schedule! ⭐')
     } catch {
-      toast.error('Failed to save to revision')
+      toast.error(hasRevisionScheduled ? 'Failed to remove from revision' : 'Failed to save to revision')
     } finally {
       setIsSavingRevision(false)
     }
-  }, [question.id, onUpdate])
+  }, [question.id, hasRevisionScheduled, onUpdate])
 
   const handleNoteChange = useCallback((value: string) => {
     setNoteText(value)
@@ -120,8 +116,6 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
       setIsCreatingFolder(false)
     }
   }, [newFolderName, question.id, onUpdate])
-
-  const hasRevisionScheduled = (question.revision_count?.total || 0) > 0
 
   return (
     <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_72px_36px_80px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
@@ -328,35 +322,38 @@ export function QuestionCard({ question, bookmarkFolders = [], questionFolderIds
                 </Button>
               }
             />
-            <TooltipContent>{hasRevisionScheduled ? 'Saved to revision' : 'Save to revision'}</TooltipContent>
+            <TooltipContent>{hasRevisionScheduled ? 'Remove from revision' : 'Save to revision'}</TooltipContent>
           </Tooltip>
 
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className={cn(
-                    'h-8 w-8 rounded-lg',
-                    question.current_revision
-                      ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-400/10'
-                      : 'text-muted-foreground/30 cursor-not-allowed'
-                  )}
-                  onClick={handleRevision}
-                  disabled={!question.current_revision}
-                  aria-label="Mark revision complete"
-                >
-                  <RotateCcw className="w-[18px] h-[18px]" />
-                </Button>
-              }
-            />
-            <TooltipContent>
-              {question.current_revision
-                ? `Revision due (Day ${question.current_revision.cycle_stage})`
-                : 'No revision due'}
-            </TooltipContent>
-          </Tooltip>
+          {question.current_revision && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-lg text-amber-400 hover:text-amber-300 hover:bg-amber-400/10"
+                    onClick={async () => {
+                      try {
+                        const { markRevisionComplete } = await import('@/lib/actions/questions')
+                        await markRevisionComplete(question.current_revision!.id, question.id)
+                        onUpdate?.()
+                        toast.success('Revision completed! 💪')
+                      } catch {
+                        toast.error('Failed to mark revision')
+                      }
+                    }}
+                    aria-label="Mark revision complete"
+                  >
+                    <RotateCcw className="w-[18px] h-[18px]" />
+                  </Button>
+                }
+              />
+              <TooltipContent>
+                Revision due (Day {question.current_revision.cycle_stage})
+              </TooltipContent>
+            </Tooltip>
+          )}
         </div>
 
         {/* 7. Done */}

@@ -211,3 +211,17 @@ export async function scheduleQuestionRevision(questionId: string) {
   if (error) throw error
   revalidatePath('/', 'layout')
 }
+
+export async function cancelQuestionRevision(questionId: string) {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  const { error } = await supabase
+    .from('revision_schedule')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('question_id', questionId)
+
+  if (error) throw error
+  revalidatePath('/', 'layout')
+}
