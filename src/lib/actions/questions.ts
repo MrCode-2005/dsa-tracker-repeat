@@ -37,14 +37,22 @@ export async function toggleQuestionSolved(questionId: string) {
     })
   } else if (existing.status === 'unsolved') {
     // Marking as solved
+    const lastSolvedDate = existing.last_solved_at ? existing.last_solved_at.split('T')[0] : null
+    const todayDate = now.split('T')[0]
+
     const updateData: Record<string, unknown> = {
       status: 'solved',
-      last_solved_at: now,
-      times_solved: existing.times_solved + 1,
       updated_at: now,
     }
+
     if (!existing.first_solved_at) {
       updateData.first_solved_at = now
+    }
+
+    // Only increment times_solved if it's on a different day to prevent spam from rapid toggling
+    if (lastSolvedDate !== todayDate) {
+      updateData.last_solved_at = now
+      updateData.times_solved = existing.times_solved + 1
     }
 
     const { error } = await supabase
@@ -53,12 +61,14 @@ export async function toggleQuestionSolved(questionId: string) {
       .eq('id', existing.id)
     if (error) throw error
 
-    // Log activity
-    await supabase.from('activity_log').insert({
-      user_id: user.id,
-      question_id: questionId,
-      activity_type: 'solve',
-    })
+    // Log activity only if we actually incremented the count (or if it's somehow first solve)
+    if (lastSolvedDate !== todayDate) {
+      await supabase.from('activity_log').insert({
+        user_id: user.id,
+        question_id: questionId,
+        activity_type: existing.times_solved > 0 ? 'revision' : 'solve',
+      })
+    }
   } else {
     // Unmarking — set back to unsolved
     const { error } = await supabase
