@@ -13,12 +13,15 @@ function checkSubmissionStatus() {
   // has an element containing "Accepted" in green text.
   // We'll look for standard success classes or text.
   
-  const successElements = Array.from(document.querySelectorAll('span, div')).filter(el => {
-    return el.textContent === 'Accepted' && window.getComputedStyle(el).color === 'rgb(44, 181, 93)'; // LeetCode's green color
+  const successLocator = document.querySelector('[data-e2e-locator="submission-result"]');
+  const isAcceptedE2E = successLocator && successLocator.textContent.trim() === 'Accepted';
+
+  const successElements = Array.from(document.querySelectorAll('span, div, p')).filter(el => {
+    return el.textContent?.trim() === 'Accepted' && 
+           (window.getComputedStyle(el).color === 'rgb(44, 181, 93)' || el.classList.contains('text-success'));
   });
 
-  // Alternative check: specifically for the newer LeetCode UI
-  const isAccepted = successElements.length > 0 || document.querySelector('[data-e2e-locator="submission-result"]') === 'Accepted';
+  const isAccepted = isAcceptedE2E || successElements.length > 0;
 
   if (isAccepted) {
     const slug = getProblemSlug();

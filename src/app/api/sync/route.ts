@@ -7,12 +7,22 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 )
 
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+}
+
+export async function OPTIONS() {
+  return NextResponse.json({}, { headers: corsHeaders })
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { userId, slug } = await req.json()
 
     if (!userId || !slug) {
-      return NextResponse.json({ error: 'Missing userId or slug' }, { status: 400 })
+      return NextResponse.json({ error: 'Missing userId or slug' }, { status: 400, headers: corsHeaders })
     }
 
     // 1. Find the question in our database by its LeetCode slug
@@ -23,7 +33,7 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (questionError || !question) {
-      return NextResponse.json({ error: 'Question not found in database', details: questionError }, { status: 404 })
+      return NextResponse.json({ error: 'Question not found in database', details: questionError }, { status: 404, headers: corsHeaders })
     }
 
     // 2. Mark it as solved for this user in the progress table
@@ -40,11 +50,11 @@ export async function POST(req: NextRequest) {
       )
 
     if (upsertError) {
-      return NextResponse.json({ error: 'Failed to update progress', details: upsertError }, { status: 500 })
+      return NextResponse.json({ error: 'Failed to update progress', details: upsertError }, { status: 500, headers: corsHeaders })
     }
 
-    return NextResponse.json({ success: true, message: `Successfully marked ${slug} as solved` })
+    return NextResponse.json({ success: true, message: `Successfully marked ${slug} as solved` }, { headers: corsHeaders })
   } catch (error) {
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500, headers: corsHeaders })
   }
 }
