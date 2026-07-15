@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+*_links.csv
+generate_youtube_csvs.py
+seed_youtube_links.py
+test_query.ts
+test_svg.html
+test_svg.js

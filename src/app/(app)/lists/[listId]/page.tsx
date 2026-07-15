@@ -1,6 +1,6 @@
 'use client'
 
-import { use, useState, useCallback } from 'react'
+import { use, useState, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
 import { ArrowLeft, Trash2 } from 'lucide-react'
@@ -18,6 +18,7 @@ import { deleteList } from '@/lib/actions/lists'
 import { AddQuestionDialog } from './add-question-dialog'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
+import { SessionProgress } from '@/components/session-progress'
 
 export default function ListDetailPage({ params }: { params: Promise<{ listId: string }> }) {
   const { listId } = use(params)
@@ -89,11 +90,34 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
     setTimeout(() => setHighlightedId(null), 3000)
   }, [questions])
 
+  const listStats = useMemo(() => {
+    if (!allQuestions) return null
+    const stats = {
+      easy: { solved: 0, total: 0 },
+      medium: { solved: 0, total: 0 },
+      hard: { solved: 0, total: 0 },
+      totalSolved: 0,
+      totalQuestions: allQuestions.length
+    }
+    allQuestions.forEach(q => {
+      const diffKey = q.difficulty?.toLowerCase() as 'easy' | 'medium' | 'hard'
+      const isSolved = q.progress?.status === 'solved'
+      if (stats[diffKey]) {
+        stats[diffKey].total++
+        if (isSolved) {
+          stats[diffKey].solved++
+          stats.totalSolved++
+        }
+      }
+    })
+    return stats
+  }, [allQuestions])
+
   return (
     <div className="space-y-6 animate-in-up pb-20">
       {/* Header */}
       <div>
-        <div className="flex items-center gap-4 mb-2">
+        <div className="flex items-center gap-4 mb-4">
           <Button variant="ghost" size="icon" className="h-8 w-8" render={<Link href="/lists" />} nativeButton={false}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
@@ -113,7 +137,13 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
-        <p className="text-muted-foreground ml-12">{listDetails?.description}</p>
+
+        <ErrorBoundary>
+          <div className="ml-12 mt-4">
+            <SessionProgress stats={listStats || undefined} />
+          </div>
+        </ErrorBoundary>
+        <p className="text-muted-foreground ml-12 mt-4">{listDetails?.description}</p>
       </div>
 
       {/* Progress */}

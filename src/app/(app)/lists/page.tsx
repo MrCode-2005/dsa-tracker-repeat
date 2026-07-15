@@ -18,9 +18,6 @@ import { getUserLists } from '@/lib/queries/lists'
 import { createList, adoptPresetList } from '@/lib/actions/lists'
 import { toast } from 'sonner'
 
-import { getLeetCodeSessionStats } from '@/lib/queries/analytics'
-import { SessionProgress } from '@/components/session-progress'
-
 export default function ListsPage() {
   const queryClient = useQueryClient()
   const [showImport, setShowImport] = useState(false)
@@ -33,11 +30,6 @@ export default function ListsPage() {
   const { data: lists, isLoading } = useQuery({
     queryKey: ['user-lists'],
     queryFn: getUserLists,
-  })
-
-  const { data: sessionStats, isLoading: sessionLoading } = useQuery({
-    queryKey: ['session-stats'],
-    queryFn: getLeetCodeSessionStats,
   })
 
   const handleCreate = async () => {
@@ -87,10 +79,6 @@ export default function ListsPage() {
           </Button>
         </div>
       </div>
-
-      <ErrorBoundary>
-        <SessionProgress stats={sessionStats} />
-      </ErrorBoundary>
 
       <ErrorBoundary>
         {isLoading ? (
