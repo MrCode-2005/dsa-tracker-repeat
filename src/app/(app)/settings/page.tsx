@@ -135,6 +135,34 @@ export default function SettingsPage() {
 
       <Separator />
 
+      {/* Extension Sync */}
+      <Card className="bg-card/50 border-border">
+        <CardContent className="p-6">
+          <h2 className="font-semibold mb-2 flex items-center gap-2">
+            LeetCode Auto-Sync Extension
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Connect the Repeat Chrome Extension to automatically mark problems as done when you get an "Accepted" verdict on LeetCode.
+          </p>
+          <div className="bg-muted/50 p-4 rounded-lg font-mono text-xs break-all border border-border flex items-center justify-between">
+            <span>{profile?.id || 'Loading your ID...'}</span>
+            {profile?.id && (
+              <Button variant="ghost" size="sm" onClick={() => {
+                navigator.clipboard.writeText(profile.id);
+                toast.success('User ID copied to clipboard');
+              }}>
+                Copy ID
+              </Button>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            Paste this User ID into the Chrome Extension popup to securely link your account.
+          </p>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
       {/* Danger zone */}
       <Card className="bg-card/50 border-destructive/20">
         <CardContent className="p-6">

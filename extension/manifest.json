@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "Repeat DSA Tracker Sync",
+  "version": "1.0",
+  "description": "Automatically syncs accepted LeetCode submissions to your personal Repeat tracker.",
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://leetcode.com/*",
+    "http://localhost:3000/*",
+    "https://*.vercel.app/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://leetcode.com/problems/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
