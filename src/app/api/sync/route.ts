@@ -88,9 +88,73 @@ export async function POST(req: NextRequest) {
         })
       }
     } else {
-      // Already solved, optionally update last_solved_at or times_solved
-      // But usually syncs shouldn't repeatedly bump times_solved if they just refresh the page
-      // We will just do nothing and return success to avoid spamming the activity log
+      // Already solved, handle automatic revision tracking
+      const lastSolvedDate = existing.last_solved_at ? existing.last_solved_at.split('T')[0] : null
+      const todayDate = now.split('T')[0]
+
+      if (lastSolvedDate !== todayDate) {
+        // Increment times_solved and update last_solved_at
+        const { error } = await supabaseAdmin
+          .from('user_question_progress')
+          .update({
+            last_solved_at: now,
+            times_solved: existing.times_solved + 1,
+            updated_at: now,
+          })
+          .eq('id', existing.id)
+        upsertError = error
+
+        if (!error) {
+          // Log revision activity
+          await supabaseAdmin.from('activity_log').insert({
+            user_id: userId,
+            question_id: question.id,
+            activity_type: 'revision',
+          })
+
+          // Check if there is an active revision schedule that is due today
+          const { data: revisionSchedule } = await supabaseAdmin
+            .from('revision_schedule')
+            .select('*')
+            .eq('user_id', userId)
+            .eq('question_id', question.id)
+            .eq('completed', false)
+            .lte('scheduled_for', todayDate)
+            .single()
+
+          if (revisionSchedule) {
+            // Automatically mark this revision as complete and schedule the next one
+            // We duplicate a bit of the markRevisionComplete logic here to avoid importing
+            // the server action directly (since this is an API route using a service role)
+            
+            // Mark current as completed
+            await supabaseAdmin
+              .from('revision_schedule')
+              .update({ completed: true })
+              .eq('id', revisionSchedule.id)
+
+            // Spaced repetition cycle: 1, 3, 7, 21 days
+            const CYCLE_DAYS = [1, 3, 7, 21]
+            const nextStage = Math.min(revisionSchedule.cycle_stage + 1, CYCLE_DAYS.length)
+            
+            if (nextStage <= CYCLE_DAYS.length) {
+              const daysUntilRevision = CYCLE_DAYS[nextStage - 1]
+              const nextScheduledDate = new Date()
+              nextScheduledDate.setDate(nextScheduledDate.getDate() + daysUntilRevision)
+              
+              await supabaseAdmin.from('revision_schedule').insert({
+                user_id: userId,
+                question_id: question.id,
+                scheduled_for: nextScheduledDate.toISOString().split('T')[0],
+                cycle_stage: nextStage,
+              })
+            }
+          }
+        }
+      } else {
+        // Solved on the same day, do nothing (prevent spam)
+        console.log(`User ${userId} solved ${slug} again on the same day. Ignoring.`)
+      }
     }
 
     if (upsertError) {

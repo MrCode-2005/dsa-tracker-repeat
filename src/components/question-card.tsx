@@ -135,7 +135,7 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
 
   return (
     <>
-    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_72px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
+    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
       
       {/* 1. Problem Column */}
       <div className="flex items-center gap-3 min-w-0">
@@ -361,6 +361,21 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
               <TooltipContent>
                 Revision due (Day {question.current_revision.cycle_stage})
               </TooltipContent>
+            </Tooltip>
+          )}
+
+          {question.progress && question.progress.times_solved > 1 && (
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <div className="flex items-center justify-center min-w-[20px] h-5 px-1 rounded bg-violet-500/10 border border-violet-500/20">
+                    <span className="text-[10px] font-bold text-violet-400">
+                      {question.progress.times_solved - 1}
+                    </span>
+                  </div>
+                }
+              />
+              <TooltipContent>Revised {question.progress.times_solved - 1} time{question.progress.times_solved - 1 !== 1 ? 's' : ''}</TooltipContent>
             </Tooltip>
           )}
         </div>
