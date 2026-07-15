@@ -11,9 +11,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { updateProfile, signOut } from '@/lib/actions/auth'
+import { clearAllRevisions, getManagedData } from '@/lib/actions/settings'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
 import { toast } from 'sonner'
+import { ManageDataDialog } from '@/components/manage-data-dialog'
 
 const profileSchema = z.object({
   display_name: z.string().min(1, 'Name is required'),
@@ -26,6 +28,7 @@ export default function SettingsPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const [email, setEmail] = useState('')
+  const [isManageDataOpen, setIsManageDataOpen] = useState(false)
 
   const { register, handleSubmit, reset, formState: { errors, isDirty } } = useForm<ProfileForm>({
     resolver: zodResolver(profileSchema),
@@ -163,6 +166,42 @@ export default function SettingsPage() {
 
       <Separator />
 
+      {/* Data & History Management */}
+      <Card className="bg-card/50 border-border">
+        <CardContent className="p-6">
+          <h2 className="font-semibold mb-2">Data & History Management</h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            Manage your revision schedules, clear test data, or reset specific problem statistics.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button
+              variant="outline"
+              onClick={() => setIsManageDataOpen(true)}
+            >
+              Manage Specific Problems
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              onClick={async () => {
+                if (confirm('Are you sure you want to completely wipe all your scheduled revisions? This cannot be undone.')) {
+                  try {
+                    await clearAllRevisions()
+                    toast.success('All revisions cleared')
+                  } catch {
+                    toast.error('Failed to clear revisions')
+                  }
+                }
+              }}
+            >
+              Clear All Revisions
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      <Separator />
+
       {/* Danger zone */}
       <Card className="bg-card/50 border-destructive/20">
         <CardContent className="p-6">
@@ -175,6 +214,12 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      <ManageDataDialog
+        isOpen={isManageDataOpen}
+        onClose={() => setIsManageDataOpen(false)}
+        fetchData={getManagedData}
+      />
     </div>
   )
 }
