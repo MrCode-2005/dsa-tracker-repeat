@@ -187,7 +187,7 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
               <TooltipTrigger
                 render={
                   <a
-                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(question.title + ' leetcode solution ' + channel.name)}`}
+                    href={`https://duckduckgo.com/?q=${encodeURIComponent(`\\site:youtube.com ${question.title} leetcode solution ${channel.name}`)}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     aria-label={`Watch ${channel.name} solution`}
