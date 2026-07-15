@@ -13,6 +13,7 @@ export interface Database {
           highest_streak: number
           last_activity_date: string | null
           created_at: string
+          youtube_channels: { name: string; color: string }[] | null
         }
         Insert: {
           id: string
@@ -23,6 +24,7 @@ export interface Database {
           highest_streak?: number
           last_activity_date?: string | null
           created_at?: string
+          youtube_channels?: { name: string; color: string }[] | null
         }
         Update: {
           id?: string
@@ -33,6 +35,7 @@ export interface Database {
           highest_streak?: number
           last_activity_date?: string | null
           created_at?: string
+          youtube_channels?: { name: string; color: string }[] | null
         }
       }
       questions: {

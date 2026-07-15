@@ -65,6 +65,7 @@ export async function signOut() {
 export async function updateProfile(data: {
   display_name?: string
   leetcode_username?: string
+  youtube_channels?: { name: string; color: string }[] | null
 }) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()

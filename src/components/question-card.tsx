@@ -15,6 +15,8 @@ import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, creat
 import { Input } from '@/components/ui/input'
 import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
 import { toast } from 'sonner'
+import { useQuery } from '@tanstack/react-query'
+import { getProfileClient } from '@/lib/queries/auth'
 
 interface QuestionCardProps {
   question: QuestionWithProgress
@@ -34,6 +36,15 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
   const [isSavingRevision, setIsSavingRevision] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfileClient,
+    staleTime: 1000 * 60 * 5, // 5 mins
+  })
+
+  const youtubeChannels = profile?.youtube_channels || [{ name: 'NeetCode', color: '#ef4444' }]
+
 
   const difficultyClass = question.difficulty === 'Easy'
     ? 'badge-easy'
@@ -135,7 +146,7 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
 
   return (
     <>
-    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_36px_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
+    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
       
       {/* 1. Problem Column */}
       <div className="flex items-center gap-3 min-w-0">
@@ -170,23 +181,31 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
       <div className="flex items-center gap-2 md:contents">
         
         {/* 2. Video */}
-        <div className="flex justify-center">
-          <Tooltip>
-            <TooltipTrigger
-              render={
-                <a
-                  href={question.youtube_url || `https://www.youtube.com/results?search_query=${encodeURIComponent(question.title + ' leetcode solution')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Watch solution video"
-                  className="inline-flex items-center justify-center h-8 w-8 rounded-lg text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-colors"
-                />
-              }
-            >
-              <CirclePlay className="w-[18px] h-[18px]" />
-            </TooltipTrigger>
-            <TooltipContent>Watch solution</TooltipContent>
-          </Tooltip>
+        <div className="flex flex-wrap items-center justify-center gap-1">
+          {youtubeChannels.map((channel, i) => (
+            <Tooltip key={i}>
+              <TooltipTrigger
+                render={
+                  <a
+                    href={`https://www.youtube.com/results?search_query=${encodeURIComponent(question.title + ' leetcode solution ' + channel.name)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`Watch ${channel.name} solution`}
+                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors"
+                    style={{ 
+                      color: channel.color,
+                      '--hover-bg': `${channel.color}20`
+                    } as React.CSSProperties}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${channel.color}20` }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                  />
+                }
+              >
+                <CirclePlay className="w-[18px] h-[18px]" />
+              </TooltipTrigger>
+              <TooltipContent>{channel.name}</TooltipContent>
+            </Tooltip>
+          ))}
         </div>
 
         {/* 3. Code (LeetCode) */}

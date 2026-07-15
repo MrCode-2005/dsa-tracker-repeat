@@ -16,6 +16,7 @@ import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
 import { toast } from 'sonner'
 import { ManageDataDialog } from '@/components/manage-data-dialog'
+import { YoutubeSettings } from '@/components/youtube-settings'
 
 const profileSchema = z.object({
   display_name: z.string().min(1, 'Name is required'),
@@ -135,6 +136,10 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Separator />
+
+      <YoutubeSettings initialChannels={profile?.youtube_channels || null} />
 
       <Separator />
 
