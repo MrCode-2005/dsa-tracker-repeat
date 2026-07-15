@@ -14,13 +14,14 @@ interface ImportWizardProps {
   onSuccess?: () => void
 }
 
-function detectColumns(rows: any[][]): { titleIdx: number, diffIdx: number, topicIdx: number, doneIdx: number } {
+function detectColumns(rows: any[][]): { titleIdx: number, diffIdx: number, topicIdx: number, doneIdx: number, youtubeIdx: number } {
   let titleIdx = 0
   let diffIdx = -1
   let topicIdx = -1
   let doneIdx = -1
+  let youtubeIdx = -1
 
-  if (rows.length === 0) return { titleIdx, diffIdx, topicIdx, doneIdx }
+  if (rows.length === 0) return { titleIdx, diffIdx, topicIdx, doneIdx, youtubeIdx }
   
   // 1. Check if first row has obvious headers
   const headerRow = rows[0].map(c => (c || '').toString().toLowerCase().trim())
@@ -31,6 +32,7 @@ function detectColumns(rows: any[][]): { titleIdx: number, diffIdx: number, topi
     if (['difficulty', 'diff', 'level'].includes(h)) diffIdx = i
     if (['topic', 'pattern', 'category', 'tag'].includes(h)) topicIdx = i
     if (['done', 'solved', 'status', 'completed'].includes(h)) doneIdx = i
+    if (['video', 'youtube', 'link', 'url', 'solution'].includes(h)) youtubeIdx = i
   }
 
   // 2. If no obvious title header was found, guess by column with longest text
@@ -52,7 +54,7 @@ function detectColumns(rows: any[][]): { titleIdx: number, diffIdx: number, topi
     }
   }
 
-  return { titleIdx, diffIdx, topicIdx, doneIdx }
+  return { titleIdx, diffIdx, topicIdx, doneIdx, youtubeIdx }
 }
 
 export function ImportWizard({ open, onClose, onSuccess }: ImportWizardProps) {
@@ -63,7 +65,7 @@ export function ImportWizard({ open, onClose, onSuccess }: ImportWizardProps) {
     setIsImporting(true)
     
     try {
-      const { titleIdx, diffIdx, topicIdx, doneIdx } = detectColumns(rows)
+      const { titleIdx, diffIdx, topicIdx, doneIdx, youtubeIdx } = detectColumns(rows)
 
       // Skip the header row if it contains header keywords
       let startIndex = 0
@@ -94,7 +96,12 @@ export function ImportWizard({ open, onClose, onSuccess }: ImportWizardProps) {
           is_solved = ['yes', 'true', '1', 'done', 'solved', '✓', '✅', 'x'].includes(doneVal)
         }
 
-        questions.push({ title, difficulty, topic, is_solved })
+        let youtube_url = undefined
+        if (youtubeIdx !== -1) {
+          youtube_url = (row[youtubeIdx] || '').toString().trim() || undefined
+        }
+
+        questions.push({ title, difficulty, topic, is_solved, youtube_url })
       }
 
       await importListFromData(fileListName, questions)

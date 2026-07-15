@@ -106,6 +106,7 @@ export async function importListFromData(
     difficulty?: 'Easy' | 'Medium' | 'Hard'
     is_solved?: boolean
     solved_date?: string
+    youtube_url?: string
   }>
 ) {
   const supabase = await createClient()
@@ -136,6 +137,7 @@ export async function importListFromData(
     // Auto-resolve missing metadata
     const resolved = await resolveLeetCodeData(q.title)
     if (resolved) {
+      q.title = resolved.title
       q.difficulty = q.difficulty || resolved.difficulty
       q.leetcode_number = q.leetcode_number || resolved.leetcode_number
       q.slug = q.slug || resolved.slug
@@ -147,40 +149,51 @@ export async function importListFromData(
     if (q.leetcode_number) {
       const { data: existing } = await supabase
         .from('questions')
-        .select('id')
+        .select('id, youtube_url')
         .eq('leetcode_number', q.leetcode_number)
         .single()
 
       if (existing) {
         questionId = existing.id
+        // If the CSV provided a youtube_url, update the existing question to include it
+        if (q.youtube_url && !existing.youtube_url) {
+          await supabase.from('questions').update({ youtube_url: q.youtube_url }).eq('id', existing.id)
+        }
       }
     }
 
     if (!questionId) {
       // Insert new question
       const slug = q.slug || q.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')
+      
+      const payload: any = {
+        leetcode_number: q.leetcode_number || null,
+        title: q.title,
+        slug,
+        topic: q.topic || null,
+        difficulty: q.difficulty || null,
+      }
+      if (q.youtube_url) payload.youtube_url = q.youtube_url
+
       const { data: newQ, error: qErr } = await supabase
         .from('questions')
-        .upsert({
-          leetcode_number: q.leetcode_number || null,
-          title: q.title,
-          slug,
-          topic: q.topic || null,
-          difficulty: q.difficulty || null,
-        }, { onConflict: 'leetcode_number' })
+        .upsert(payload, { onConflict: 'leetcode_number' })
         .select('id')
         .single()
 
       if (qErr) {
         // If upsert fails (no leetcode_number), try regular insert
+        const fallbackPayload: any = {
+          title: q.title,
+          slug,
+          topic: q.topic || null,
+          difficulty: q.difficulty || null,
+        }
+        if (q.youtube_url) fallbackPayload.youtube_url = q.youtube_url
+
         const { data: insertedQ } = await supabase
           .from('questions')
-          .insert({
-            title: q.title,
-            slug,
-            topic: q.topic || null,
-            difficulty: q.difficulty || null,
-          })
+          .insert(fallbackPayload)
           .select('id')
           .single()
         questionId = insertedQ?.id || null
