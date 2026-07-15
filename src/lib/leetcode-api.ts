@@ -11,7 +11,9 @@ let cachedProblems: Record<string, LeetCodeProblemMetadata> | null = null
 export function normalizeTitle(title: string): string {
   // Remove starting numbers only if followed by a dot (e.g. "231. " or "1. ")
   // This prevents accidentally stripping the "3" from "3 Sum"
-  const stripped = title.replace(/^\d+\.\s+/, '')
+  let stripped = title.replace(/^\d+\.\s+/, '')
+  // Strip common trailing words that users might add like "Problem" or "Question"
+  stripped = stripped.replace(/(?:\b|_)(problem|question)(?:\b|_)$/i, '')
   // Remove all non-alphanumeric characters and lowercase
   return stripped.replace(/[^a-z0-9]/gi, '').toLowerCase()
 }
