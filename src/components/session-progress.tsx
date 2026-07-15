@@ -81,7 +81,7 @@ export function SessionProgress({ stats }: SessionProgressProps) {
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeOpacity={0.2}
-            strokeDasharray={`${easyLen} ${circumference}`}
+            strokeDasharray={`${easyLen} ${circumference - easyLen}`}
             strokeDashoffset={-easyStart}
           />
           {/* Easy Foreground */}
@@ -94,7 +94,7 @@ export function SessionProgress({ stats }: SessionProgressProps) {
               stroke={easyColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
-              strokeDasharray={`${easySolvedLen} ${circumference}`}
+              strokeDasharray={`${easySolvedLen} ${circumference - easySolvedLen}`}
               strokeDashoffset={-easyStart}
             />
           )}
@@ -109,7 +109,7 @@ export function SessionProgress({ stats }: SessionProgressProps) {
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeOpacity={0.2}
-            strokeDasharray={`${medLen} ${circumference}`}
+            strokeDasharray={`${medLen} ${circumference - medLen}`}
             strokeDashoffset={-medStart}
           />
           {/* Medium Foreground */}
@@ -122,7 +122,7 @@ export function SessionProgress({ stats }: SessionProgressProps) {
               stroke={medColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
-              strokeDasharray={`${medSolvedLen} ${circumference}`}
+              strokeDasharray={`${medSolvedLen} ${circumference - medSolvedLen}`}
               strokeDashoffset={-medStart}
             />
           )}
@@ -137,7 +137,7 @@ export function SessionProgress({ stats }: SessionProgressProps) {
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeOpacity={0.2}
-            strokeDasharray={`${hardLen} ${circumference}`}
+            strokeDasharray={`${hardLen} ${circumference - hardLen}`}
             strokeDashoffset={-hardStart}
           />
           {/* Hard Foreground */}
@@ -150,7 +150,7 @@ export function SessionProgress({ stats }: SessionProgressProps) {
               stroke={hardColor}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
-              strokeDasharray={`${hardSolvedLen} ${circumference}`}
+              strokeDasharray={`${hardSolvedLen} ${circumference - hardSolvedLen}`}
               strokeDashoffset={-hardStart}
             />
           )}
