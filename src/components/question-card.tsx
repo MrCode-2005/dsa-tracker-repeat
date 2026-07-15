@@ -183,12 +183,15 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         {/* 2. Video */}
         <div className="flex flex-wrap items-center justify-center gap-1">
           {youtubeChannels.map((channel, i) => {
-            let videoHref = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${question.title} leetcode solution ${channel.name}`)}`;
+            let videoHref = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${question.title} ${channel.name} leetcode`)}`
             
-            // The user's CSV contains direct links (e.g., Destination FAANG).
-            // We assign this direct link to the first NON-NeetCode channel.
-            if (question.youtube_url && i === (youtubeChannels[0].name.toLowerCase().includes('neetcode') ? 1 : 0)) {
-              videoHref = question.youtube_url;
+            // 1. Direct channel match in video_urls JSONB
+            if (question.video_urls && question.video_urls[channel.name]) {
+              videoHref = question.video_urls[channel.name]
+            } 
+            // 2. Legacy fallback: Assign the old youtube_url or 'default' video_url to the first non-NeetCode channel
+            else if ((question.video_urls?.['default'] || question.youtube_url) && i === (youtubeChannels[0].name.toLowerCase().includes('neetcode') ? 1 : 0)) {
+              videoHref = question.video_urls?.['default'] || question.youtube_url!
             }
 
             return (

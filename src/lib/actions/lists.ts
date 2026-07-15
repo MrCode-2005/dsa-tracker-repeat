@@ -107,7 +107,8 @@ export async function importListFromData(
     is_solved?: boolean
     solved_date?: string
     youtube_url?: string
-  }>
+  }>,
+  targetChannel?: string
 ) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -149,7 +150,7 @@ export async function importListFromData(
     if (q.leetcode_number) {
       const { data: existing } = await supabase
         .from('questions')
-        .select('id, youtube_url')
+        .select('id, youtube_url, video_urls')
         .eq('leetcode_number', q.leetcode_number)
         .single()
 
@@ -157,7 +158,16 @@ export async function importListFromData(
         questionId = existing.id
         // If the CSV provided a youtube_url, update the existing question to include it
         if (q.youtube_url) {
-          await supabase.from('questions').update({ youtube_url: q.youtube_url }).eq('id', existing.id)
+          const newVideoUrls = existing.video_urls || {}
+          if (targetChannel) {
+            newVideoUrls[targetChannel] = q.youtube_url
+          } else {
+            newVideoUrls['default'] = q.youtube_url
+          }
+          await supabase.from('questions').update({ 
+            youtube_url: q.youtube_url, // Keep fallback for now
+            video_urls: newVideoUrls
+          }).eq('id', existing.id)
         }
       }
     }
@@ -173,7 +183,11 @@ export async function importListFromData(
         topic: q.topic || null,
         difficulty: q.difficulty || null,
       }
-      if (q.youtube_url) payload.youtube_url = q.youtube_url
+      
+      if (q.youtube_url) {
+        payload.youtube_url = q.youtube_url
+        payload.video_urls = targetChannel ? { [targetChannel]: q.youtube_url } : { 'default': q.youtube_url }
+      }
 
       const { data: newQ, error: qErr } = await supabase
         .from('questions')
@@ -189,7 +203,10 @@ export async function importListFromData(
           topic: q.topic || null,
           difficulty: q.difficulty || null,
         }
-        if (q.youtube_url) fallbackPayload.youtube_url = q.youtube_url
+        if (q.youtube_url) {
+          fallbackPayload.youtube_url = q.youtube_url
+          fallbackPayload.video_urls = targetChannel ? { [targetChannel]: q.youtube_url } : { 'default': q.youtube_url }
+        }
 
         const { data: insertedQ } = await supabase
           .from('questions')

@@ -48,6 +48,7 @@ export interface Database {
           difficulty: 'Easy' | 'Medium' | 'Hard' | null
           companies: string[] | null
           youtube_url: string | null
+          video_urls: any | null
           created_at: string
         }
         Insert: {
@@ -59,6 +60,7 @@ export interface Database {
           difficulty?: 'Easy' | 'Medium' | 'Hard' | null
           companies?: string[] | null
           youtube_url?: string | null
+          video_urls?: any | null
           created_at?: string
         }
         Update: {
@@ -70,6 +72,7 @@ export interface Database {
           difficulty?: 'Easy' | 'Medium' | 'Hard' | null
           companies?: string[] | null
           youtube_url?: string | null
+          video_urls?: any | null
           created_at?: string
         }
       }
