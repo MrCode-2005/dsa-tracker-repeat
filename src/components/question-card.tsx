@@ -183,15 +183,14 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         {/* 2. Video */}
         <div className="flex flex-wrap items-center justify-center gap-1">
           {youtubeChannels.map((channel, i) => {
-            const isFirstChannel = i === 0;
             const slug = question.slug || question.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
             
             let videoHref = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${question.title} leetcode solution ${channel.name}`)}`;
             
-            if (isFirstChannel && question.youtube_url) {
-              videoHref = question.youtube_url;
-            } else if (channel.name.toLowerCase().includes('neetcode')) {
+            if (channel.name.toLowerCase().includes('neetcode')) {
               videoHref = `https://neetcode.io/solutions/${slug}`;
+            } else if (question.youtube_url && i === (youtubeChannels[0].name.toLowerCase().includes('neetcode') ? 1 : 0)) {
+              videoHref = question.youtube_url;
             }
 
             return (
