@@ -138,3 +138,70 @@ export async function getQuickStats() {
     revisionsCompleted: revisionsCompleted || 0,
   }
 }
+
+export async function getLeetCodeSessionStats() {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) {
+    return {
+      easy: { solved: 0, total: 0 },
+      medium: { solved: 0, total: 0 },
+      hard: { solved: 0, total: 0 },
+      totalSolved: 0,
+      totalQuestions: 0
+    }
+  }
+
+  // 1. Get all questions in user's lists
+  const { data: listQuestions } = await supabase
+    .from('list_questions')
+    .select('question:questions(id, difficulty), list:lists!inner(user_id)')
+    .eq('list.user_id', user.id)
+
+  // Deduplicate questions to get distinct questions
+  const distinctQuestions = new Map<string, string>() // id -> difficulty
+  if (listQuestions) {
+    listQuestions.forEach(lq => {
+      const q = lq.question as any
+      if (q && q.id && q.difficulty) {
+        distinctQuestions.set(q.id, q.difficulty)
+      }
+    })
+  }
+
+  // 2. Get all solved progress for the user
+  const { data: solvedProgress } = await supabase
+    .from('user_question_progress')
+    .select('question_id')
+    .eq('user_id', user.id)
+    .eq('status', 'solved')
+
+  const solvedSet = new Set<string>()
+  if (solvedProgress) {
+    solvedProgress.forEach(p => solvedSet.add(p.question_id))
+  }
+
+  // 3. Calculate stats
+  const stats = {
+    easy: { solved: 0, total: 0 },
+    medium: { solved: 0, total: 0 },
+    hard: { solved: 0, total: 0 },
+    totalSolved: 0,
+    totalQuestions: distinctQuestions.size
+  }
+
+  distinctQuestions.forEach((difficulty, qId) => {
+    const isSolved = solvedSet.has(qId)
+    const diffKey = difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'
+    
+    if (stats[diffKey]) {
+      stats[diffKey].total++
+      if (isSolved) {
+        stats[diffKey].solved++
+        stats.totalSolved++
+      }
+    }
+  })
+
+  return stats
+}

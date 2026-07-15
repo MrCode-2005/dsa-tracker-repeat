@@ -12,8 +12,9 @@ import { StatCardSkeleton, QuestionCardSkeleton } from '@/components/loading-ske
 import { ErrorBoundary } from '@/components/error-boundary'
 import { createClient } from '@/lib/supabase/client'
 import { getRevisionsDue } from '@/lib/queries/revisions'
-import { getQuickStats } from '@/lib/queries/analytics'
+import { getQuickStats, getLeetCodeSessionStats } from '@/lib/queries/analytics'
 import type { Profile } from '@/lib/types/database'
+import { SessionProgress } from '@/components/session-progress'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState<Profile | null>(null)
@@ -34,6 +35,11 @@ export default function DashboardPage() {
     queryFn: getQuickStats,
   })
 
+  const { data: sessionStats, isLoading: sessionLoading } = useQuery({
+    queryKey: ['session-stats'],
+    queryFn: getLeetCodeSessionStats,
+  })
+
   const { data: revisions, isLoading: revisionsLoading } = useQuery({
     queryKey: ['revisions-today'],
     queryFn: () => getRevisionsDue('today'),
@@ -51,17 +57,23 @@ export default function DashboardPage() {
         <p className="text-muted-foreground mt-1">Here&apos;s your practice overview for today</p>
       </div>
 
-      {/* Streak */}
-      <ErrorBoundary>
-        <Card className="bg-card/50 border-border">
-          <CardContent className="p-6">
-            <StreakCounter
-              currentStreak={profile?.current_streak || 0}
-              highestStreak={profile?.highest_streak || 0}
-            />
-          </CardContent>
-        </Card>
-      </ErrorBoundary>
+      {/* Streak and Session Progress */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ErrorBoundary>
+          <Card className="bg-card/50 border-border h-full flex flex-col justify-center">
+            <CardContent className="p-6">
+              <StreakCounter
+                currentStreak={profile?.current_streak || 0}
+                highestStreak={profile?.highest_streak || 0}
+              />
+            </CardContent>
+          </Card>
+        </ErrorBoundary>
+
+        <ErrorBoundary>
+          <SessionProgress stats={sessionStats} />
+        </ErrorBoundary>
+      </div>
 
       {/* Stats Grid */}
       <ErrorBoundary>

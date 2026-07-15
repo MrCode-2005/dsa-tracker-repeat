@@ -18,6 +18,9 @@ import { getUserLists } from '@/lib/queries/lists'
 import { createList, adoptPresetList } from '@/lib/actions/lists'
 import { toast } from 'sonner'
 
+import { getLeetCodeSessionStats } from '@/lib/queries/analytics'
+import { SessionProgress } from '@/components/session-progress'
+
 export default function ListsPage() {
   const queryClient = useQueryClient()
   const [showImport, setShowImport] = useState(false)
@@ -30,6 +33,11 @@ export default function ListsPage() {
   const { data: lists, isLoading } = useQuery({
     queryKey: ['user-lists'],
     queryFn: getUserLists,
+  })
+
+  const { data: sessionStats, isLoading: sessionLoading } = useQuery({
+    queryKey: ['session-stats'],
+    queryFn: getLeetCodeSessionStats,
   })
 
   const handleCreate = async () => {
@@ -62,7 +70,7 @@ export default function ListsPage() {
 
   return (
     <div className="space-y-8 animate-in-up">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold">My Lists</h1>
           <p className="text-muted-foreground mt-1">Organize your DSA practice</p>
@@ -79,6 +87,10 @@ export default function ListsPage() {
           </Button>
         </div>
       </div>
+
+      <ErrorBoundary>
+        <SessionProgress stats={sessionStats} />
+      </ErrorBoundary>
 
       <ErrorBoundary>
         {isLoading ? (
