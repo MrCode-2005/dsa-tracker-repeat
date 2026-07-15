@@ -182,30 +182,37 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         
         {/* 2. Video */}
         <div className="flex flex-wrap items-center justify-center gap-1">
-          {youtubeChannels.map((channel, i) => (
-            <Tooltip key={i}>
-              <TooltipTrigger
-                render={
-                  <a
-                    href={`https://duckduckgo.com/?q=${encodeURIComponent(`\\site:youtube.com ${question.title} leetcode solution ${channel.name}`)}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`Watch ${channel.name} solution`}
-                    className="inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors"
-                    style={{ 
-                      color: channel.color,
-                      '--hover-bg': `${channel.color}20`
-                    } as React.CSSProperties}
-                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${channel.color}20` }}
-                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
-                  />
-                }
-              >
-                <CirclePlay className="w-[18px] h-[18px]" />
-              </TooltipTrigger>
-              <TooltipContent>{channel.name}</TooltipContent>
-            </Tooltip>
-          ))}
+          {youtubeChannels.map((channel, i) => {
+            const isFirstChannel = i === 0;
+            const videoHref = (isFirstChannel && question.youtube_url) 
+              ? question.youtube_url 
+              : `https://www.youtube.com/results?search_query=${encodeURIComponent(`${question.title} leetcode solution ${channel.name}`)}`;
+
+            return (
+              <Tooltip key={i}>
+                <TooltipTrigger
+                  render={
+                    <a
+                      href={videoHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`Watch ${channel.name} solution`}
+                      className="inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors"
+                      style={{ 
+                        color: channel.color,
+                        '--hover-bg': `${channel.color}20`
+                      } as React.CSSProperties}
+                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${channel.color}20` }}
+                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                    />
+                  }
+                >
+                  <CirclePlay className="w-[18px] h-[18px]" />
+                </TooltipTrigger>
+                <TooltipContent>{channel.name}</TooltipContent>
+              </Tooltip>
+            );
+          })}
         </div>
 
         {/* 3. Code (LeetCode) */}
