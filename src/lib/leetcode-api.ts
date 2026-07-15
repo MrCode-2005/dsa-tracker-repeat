@@ -9,8 +9,9 @@ export interface LeetCodeProblemMetadata {
 let cachedProblems: Record<string, LeetCodeProblemMetadata> | null = null
 
 export function normalizeTitle(title: string): string {
-  // Remove starting numbers like "231. " or "1 "
-  const stripped = title.replace(/^\d+[\.\s]+/, '')
+  // Remove starting numbers only if followed by a dot (e.g. "231. " or "1. ")
+  // This prevents accidentally stripping the "3" from "3 Sum"
+  const stripped = title.replace(/^\d+\.\s+/, '')
   // Remove all non-alphanumeric characters and lowercase
   return stripped.replace(/[^a-z0-9]/gi, '').toLowerCase()
 }
@@ -62,11 +63,19 @@ export async function resolveLeetCodeData(title: string): Promise<LeetCodeProble
   // Fallback: If exact match fails, check if the official LeetCode title starts with the provided title
   // Example: "Two Sum - II" -> "twosumii" matches "twosumiiinputarrayissorted"
   if (normalized.length >= 4) { // Only do this for sufficiently long titles to avoid false positives
+    let bestMatch: LeetCodeProblemMetadata | null = null
+    let shortestLength = Infinity
+
     for (const key in dict) {
       if (key.startsWith(normalized)) {
-        return dict[key]
+        if (key.length < shortestLength) {
+          shortestLength = key.length
+          bestMatch = dict[key]
+        }
       }
     }
+    
+    return bestMatch
   }
 
   return null
