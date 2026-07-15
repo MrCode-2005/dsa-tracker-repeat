@@ -156,7 +156,7 @@ export async function importListFromData(
       if (existing) {
         questionId = existing.id
         // If the CSV provided a youtube_url, update the existing question to include it
-        if (q.youtube_url && !existing.youtube_url) {
+        if (q.youtube_url) {
           await supabase.from('questions').update({ youtube_url: q.youtube_url }).eq('id', existing.id)
         }
       }

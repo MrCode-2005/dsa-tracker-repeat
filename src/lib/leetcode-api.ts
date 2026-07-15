@@ -56,5 +56,18 @@ export async function fetchLeetcodeDictionary(): Promise<Record<string, LeetCode
 export async function resolveLeetCodeData(title: string): Promise<LeetCodeProblemMetadata | null> {
   const dict = await fetchLeetcodeDictionary()
   const normalized = normalizeTitle(title)
-  return dict[normalized] || null
+  
+  if (dict[normalized]) return dict[normalized]
+
+  // Fallback: If exact match fails, check if the official LeetCode title starts with the provided title
+  // Example: "Two Sum - II" -> "twosumii" matches "twosumiiinputarrayissorted"
+  if (normalized.length >= 4) { // Only do this for sufficiently long titles to avoid false positives
+    for (const key in dict) {
+      if (key.startsWith(normalized)) {
+        return dict[key]
+      }
+    }
+  }
+
+  return null
 }
