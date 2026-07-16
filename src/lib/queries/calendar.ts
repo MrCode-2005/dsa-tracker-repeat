@@ -46,24 +46,31 @@ export async function getCalendarData(): Promise<CalendarData> {
   const chunkSize = 100
   let allQuestions: any[] = []
   
+  const chunkPromises = []
   for (let i = 0; i < questionIds.length; i += chunkSize) {
     const chunk = questionIds.slice(i, i + chunkSize)
-    const { data: chunkQuestions, error } = await supabase
-      .from('questions')
-      .select('*')
-      .in('id', chunk)
-      
-    if (error) {
-      console.error("GET CALENDAR DATA ERROR (Chunk):", error)
+    chunkPromises.push(
+      supabase
+        .from('questions')
+        .select('*')
+        .in('id', chunk)
+    )
+  }
+
+  const chunkResults = await Promise.all(chunkPromises)
+  
+  for (const result of chunkResults) {
+    if (result.error) {
+      console.error("GET CALENDAR DATA ERROR (Chunk):", result.error)
       return { 
         progressList: pData, 
         revisionsList: rData, 
-        questionsList: []
+        questionsList: [],
+        debug: { err: result.error.message }
       }
     }
-    
-    if (chunkQuestions) {
-      allQuestions = [...allQuestions, ...chunkQuestions]
+    if (result.data) {
+      allQuestions.push(...result.data)
     }
   }
 
