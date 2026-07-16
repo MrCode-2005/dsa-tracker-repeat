@@ -11,7 +11,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { EditQuestionDialog } from '@/components/edit-question-dialog'
-import { ProblemDetailsDialog } from '@/components/problem-details-dialog'
 import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision, cancelQuestionRevision, removeQuestionFromList, updateConfidenceRating, updatePerceivedDifficulty } from '@/lib/actions/questions'
 import { Input } from '@/components/ui/input'
 import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
@@ -36,7 +35,6 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [isSavingRevision, setIsSavingRevision] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
   const [confidenceRating, setConfidenceRating] = useState<number | null>(question.progress?.confidence_rating || null)
   const [perceivedDifficulty, setPerceivedDifficulty] = useState<'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard' | null>(question.progress?.perceived_difficulty || null)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
@@ -182,7 +180,7 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
     <>
     <div 
       className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80 cursor-pointer"
-      onDoubleClick={() => setIsDetailsOpen(true)}
+      onDoubleClick={() => window.open(`/problems/${question.id}`, '_blank')}
     >
       
       {/* 1. Problem Column */}
@@ -583,13 +581,6 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
       onOpenChange={setIsEditOpen}
       question={question as any}
       onSuccess={onUpdate}
-    />
-    
-    <ProblemDetailsDialog
-      questionId={question.id}
-      open={isDetailsOpen}
-      onOpenChange={setIsDetailsOpen}
-      onUpdate={onUpdate}
     />
     </>
   )
