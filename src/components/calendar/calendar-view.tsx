@@ -63,19 +63,18 @@ export function CalendarView({ progressList, revisionsList, questionsList, bookm
 
     progressList.forEach(p => {
       if (p.first_solved_at) {
-        const dateStr = p.first_solved_at.split('T')[0]
+        const dateStr = format(new Date(p.first_solved_at), 'yyyy-MM-dd')
         addActivity(dateStr, 'solved', p)
       }
     })
 
     revisionsList.forEach(r => {
       if (r.completed && r.completed_at) {
-        const dateStr = r.completed_at.split('T')[0]
+        const dateStr = format(new Date(r.completed_at), 'yyyy-MM-dd')
         addActivity(dateStr, 'revised', r)
       }
       if (!r.completed && r.scheduled_for) {
-        // Only count as due if it's strictly due on this date (or overdue, handled later in logic if needed)
-        // For calendar mapping, we map to the scheduled_for date exactly
+        // scheduled_for is just a date string, so avoid timezone shift by splitting directly
         const dateStr = r.scheduled_for.split('T')[0]
         addActivity(dateStr, 'due', r)
       }
