@@ -61,6 +61,7 @@ export function DayDetails({ date, activity, questionsMap, bookmarkFolders }: Da
                     question={q} 
                     bookmarkFolders={bookmarkFolders} 
                     onUpdate={() => window.location.reload()}
+                    variant="compact"
                   />
                 ))}
               </div>
@@ -85,6 +86,7 @@ export function DayDetails({ date, activity, questionsMap, bookmarkFolders }: Da
                     question={q} 
                     bookmarkFolders={bookmarkFolders} 
                     onUpdate={() => window.location.reload()}
+                    variant="compact"
                   />
                 ))}
               </div>
@@ -109,6 +111,7 @@ export function DayDetails({ date, activity, questionsMap, bookmarkFolders }: Da
                     question={q} 
                     bookmarkFolders={bookmarkFolders} 
                     onUpdate={() => window.location.reload()}
+                    variant="compact"
                   />
                 ))}
               </div>

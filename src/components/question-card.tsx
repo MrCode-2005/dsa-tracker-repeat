@@ -26,9 +26,10 @@ interface QuestionCardProps {
   questionFolderIds?: string[]
   onUpdate?: () => void
   index?: number
+  variant?: 'default' | 'compact'
 }
 
-export function QuestionCard({ question, listId, bookmarkFolders = [], questionFolderIds = [], onUpdate, index }: QuestionCardProps) {
+export function QuestionCard({ question, listId, bookmarkFolders = [], questionFolderIds = [], onUpdate, index, variant = 'default' }: QuestionCardProps) {
   const router = useRouter()
   const [isSolved, setIsSolved] = useState(question.progress?.status === 'solved')
   const [animateSolve, setAnimateSolve] = useState(false)
@@ -178,10 +179,17 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
     'very-hard': 'bg-red-500/20 text-red-500 border-red-500/50 hover:bg-red-500/30',
   }
 
+  const isCompact = variant === 'compact'
+
   return (
     <>
     <div 
-      className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80 cursor-pointer"
+      className={cn(
+        "group grid grid-cols-1 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80 cursor-pointer",
+        isCompact 
+          ? "gap-2 md:grid-cols-[minmax(0,1fr)_32px_44px_36px_84px_36px_80px] px-2 py-2" 
+          : "gap-3 md:gap-4 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px]"
+      )}
       onClick={() => router.push(`/problems/${question.id}`)}
     >
       
@@ -300,45 +308,47 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         </div>
 
         {/* 2. Video */}
-        <div className="flex flex-wrap items-center justify-center gap-1">
-          {youtubeChannels.map((channel, i) => {
-            let videoHref = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${question.title} ${channel.name} leetcode`)}`
-            
-            // 1. Direct channel match in video_urls JSONB
-            if (question.video_urls && question.video_urls[channel.name]) {
-              videoHref = question.video_urls[channel.name]
-            } 
-            // 2. Legacy fallback: Assign the old youtube_url or 'default' video_url to the first non-NeetCode channel
-            else if ((question.video_urls?.['default'] || question.youtube_url) && i === (youtubeChannels[0].name.toLowerCase().includes('neetcode') ? 1 : 0)) {
-              videoHref = question.video_urls?.['default'] || question.youtube_url!
-            }
+        {!isCompact && (
+          <div className="flex flex-wrap items-center justify-center gap-1">
+            {youtubeChannels.map((channel, i) => {
+              let videoHref = `https://www.youtube.com/results?search_query=${encodeURIComponent(`${question.title} ${channel.name} leetcode`)}`
+              
+              // 1. Direct channel match in video_urls JSONB
+              if (question.video_urls && question.video_urls[channel.name]) {
+                videoHref = question.video_urls[channel.name]
+              } 
+              // 2. Legacy fallback: Assign the old youtube_url or 'default' video_url to the first non-NeetCode channel
+              else if ((question.video_urls?.['default'] || question.youtube_url) && i === (youtubeChannels[0].name.toLowerCase().includes('neetcode') ? 1 : 0)) {
+                videoHref = question.video_urls?.['default'] || question.youtube_url!
+              }
 
-            return (
-              <Tooltip key={i}>
-                <TooltipTrigger
-                  render={
-                    <a
-                      href={videoHref}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      aria-label={`Watch ${channel.name} solution`}
-                      className="inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors"
-                      style={{ 
-                        color: channel.color,
-                        '--hover-bg': `${channel.color}20`
-                      } as React.CSSProperties}
-                      onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${channel.color}20` }}
-                      onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
-                    />
-                  }
-                >
-                  <CirclePlay className="w-[18px] h-[18px]" />
-                </TooltipTrigger>
-                <TooltipContent>{channel.name}</TooltipContent>
-              </Tooltip>
-            );
-          })}
-        </div>
+              return (
+                <Tooltip key={i}>
+                  <TooltipTrigger
+                    render={
+                      <a
+                        href={videoHref}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={`Watch ${channel.name} solution`}
+                        className="inline-flex items-center justify-center h-8 w-8 rounded-lg transition-colors"
+                        style={{ 
+                          color: channel.color,
+                          '--hover-bg': `${channel.color}20`
+                        } as React.CSSProperties}
+                        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = `${channel.color}20` }}
+                        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+                      />
+                    }
+                  >
+                    <CirclePlay className="w-[18px] h-[18px]" />
+                  </TooltipTrigger>
+                  <TooltipContent>{channel.name}</TooltipContent>
+                </Tooltip>
+              );
+            })}
+          </div>
+        )}
 
         {/* 3. Code (LeetCode) */}
         <div className="flex justify-center">
@@ -361,105 +371,109 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         </div>
 
         {/* 4. Notes */}
-        <div className="flex justify-center">
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn('h-8 w-8 rounded-lg', noteText ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
-                        aria-label="Add note"
-                      >
-                        <StickyNote className="w-[18px] h-[18px]" />
-                      </Button>
-                    }
-                  />
-                }
-              />
-              <TooltipContent>{noteText ? 'View note' : 'Add note'}</TooltipContent>
-            </Tooltip>
-            <PopoverContent className="w-auto min-w-80 max-w-[90vw] bg-popover border-border">
-              <div className="space-y-2 flex flex-col h-full w-full">
-                <label className="text-sm font-medium">Notes</label>
-                <Textarea
-                  placeholder="Add your notes here..."
-                  value={noteText}
-                  onChange={(e) => handleNoteChange(e.target.value)}
-                  style={{ resize: 'both', fieldSizing: 'fixed' } as any}
-                  className="min-h-24 min-w-[280px] bg-background/50 text-sm"
+        {!isCompact && (
+          <div className="flex justify-center">
+            <Popover>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn('h-8 w-8 rounded-lg', noteText ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
+                          aria-label="Add note"
+                        >
+                          <StickyNote className="w-[18px] h-[18px]" />
+                        </Button>
+                      }
+                    />
+                  }
                 />
-                <p className="text-xs text-muted-foreground">Auto-saved after you stop typing</p>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+                <TooltipContent>{noteText ? 'View note' : 'Add note'}</TooltipContent>
+              </Tooltip>
+              <PopoverContent className="w-auto min-w-80 max-w-[90vw] bg-popover border-border">
+                <div className="space-y-2 flex flex-col h-full w-full">
+                  <label className="text-sm font-medium">Notes</label>
+                  <Textarea
+                    placeholder="Add your notes here..."
+                    value={noteText}
+                    onChange={(e) => handleNoteChange(e.target.value)}
+                    style={{ resize: 'both', fieldSizing: 'fixed' } as any}
+                    className="min-h-24 min-w-[280px] bg-background/50 text-sm"
+                  />
+                  <p className="text-xs text-muted-foreground">Auto-saved after you stop typing</p>
+                </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
 
         {/* 5. Bookmark */}
-        <div className="flex justify-center">
-          <Popover>
-            <Tooltip>
-              <TooltipTrigger
-                render={
-                  <PopoverTrigger
-                    render={
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn('h-8 w-8 rounded-lg', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
-                        aria-label="Bookmark"
-                      >
-                        <Bookmark className={cn('w-[18px] h-[18px]', questionFolderIds.length > 0 && 'fill-current')} />
-                      </Button>
-                    }
-                  />
-                }
-              />
-              <TooltipContent>Bookmark</TooltipContent>
-            </Tooltip>
-            <PopoverContent className="w-64 bg-popover border-border">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Bookmark Folders</label>
-                {bookmarkFolders.length === 0 && (
-                  <p className="text-xs text-muted-foreground">No folders yet</p>
-                )}
-                {bookmarkFolders.map((folder) => (
-                  <button
-                    key={folder.id}
-                    onClick={() => handleToggleBookmark(folder.id)}
-                    className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors text-left"
-                  >
-                    <span>{folder.emoji || '📌'}</span>
-                    <span className="flex-1 truncate">{folder.name}</span>
-                    {questionFolderIds.includes(folder.id) && (
-                      <Check className="w-3.5 h-3.5 text-primary" />
-                    )}
-                  </button>
-                ))}
-                <div className="pt-2 border-t border-border flex gap-2">
-                  <Input
-                    placeholder="New folder name"
-                    value={newFolderName}
-                    onChange={(e) => setNewFolderName(e.target.value)}
-                    className="h-8 text-sm"
-                    onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
-                  />
-                  <Button
-                    size="sm"
-                    className="h-8 text-xs"
-                    onClick={handleCreateFolder}
-                    disabled={isCreatingFolder || !newFolderName.trim()}
-                  >
-                    Add
-                  </Button>
+        {!isCompact && (
+          <div className="flex justify-center">
+            <Popover>
+              <Tooltip>
+                <TooltipTrigger
+                  render={
+                    <PopoverTrigger
+                      render={
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className={cn('h-8 w-8 rounded-lg', questionFolderIds.length > 0 ? 'text-primary' : 'text-muted-foreground/50 hover:text-muted-foreground')}
+                          aria-label="Bookmark"
+                        >
+                          <Bookmark className={cn('w-[18px] h-[18px]', questionFolderIds.length > 0 && 'fill-current')} />
+                        </Button>
+                      }
+                    />
+                  }
+                />
+                <TooltipContent>Bookmark</TooltipContent>
+              </Tooltip>
+              <PopoverContent className="w-64 bg-popover border-border">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Bookmark Folders</label>
+                  {bookmarkFolders.length === 0 && (
+                    <p className="text-xs text-muted-foreground">No folders yet</p>
+                  )}
+                  {bookmarkFolders.map((folder) => (
+                    <button
+                      key={folder.id}
+                      onClick={() => handleToggleBookmark(folder.id)}
+                      className="flex items-center gap-2 w-full px-2 py-1.5 rounded-md text-sm hover:bg-accent transition-colors text-left"
+                    >
+                      <span>{folder.emoji || '📌'}</span>
+                      <span className="flex-1 truncate">{folder.name}</span>
+                      {questionFolderIds.includes(folder.id) && (
+                        <Check className="w-3.5 h-3.5 text-primary" />
+                      )}
+                    </button>
+                  ))}
+                  <div className="pt-2 border-t border-border flex gap-2">
+                    <Input
+                      placeholder="New folder name"
+                      value={newFolderName}
+                      onChange={(e) => setNewFolderName(e.target.value)}
+                      className="h-8 text-sm"
+                      onKeyDown={(e) => e.key === 'Enter' && handleCreateFolder()}
+                    />
+                    <Button
+                      size="sm"
+                      className="h-8 text-xs"
+                      onClick={handleCreateFolder}
+                      disabled={isCreatingFolder || !newFolderName.trim()}
+                    >
+                      Add
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
+              </PopoverContent>
+            </Popover>
+          </div>
+        )}
 
         {/* 6. Review (Spaced Repetition) */}
         <div className="flex items-center justify-center gap-1">
@@ -553,28 +567,30 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         </div>
 
         {/* 9. More Options */}
-        <div className="flex justify-center">
-          <DropdownMenu>
-            <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" />}>
-              <MoreHorizontal className="w-[18px] h-[18px]" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
-              <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer">
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit Question
-              </DropdownMenuItem>
-              {listId && (
-                <>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" onClick={handleRemoveFromList}>
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Remove from List
-                  </DropdownMenuItem>
-                </>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {!isCompact && (
+          <div className="flex justify-center">
+            <DropdownMenu>
+              <DropdownMenuTrigger render={<Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" />}>
+                <MoreHorizontal className="w-[18px] h-[18px]" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48 bg-popover border-border">
+                <DropdownMenuItem onClick={() => setIsEditOpen(true)} className="cursor-pointer">
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit Question
+                </DropdownMenuItem>
+                {listId && (
+                  <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" onClick={handleRemoveFromList}>
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Remove from List
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
 
       </div>
     </div>
