@@ -26,9 +26,10 @@ interface CalendarViewProps {
   revisionsList: any[]
   questionsList: QuestionWithProgress[]
   bookmarkFolders: any[]
+  debugInfo?: any
 }
 
-export function CalendarView({ progressList, revisionsList, questionsList, bookmarkFolders }: CalendarViewProps) {
+export function CalendarView({ progressList, revisionsList, questionsList, bookmarkFolders, debugInfo }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date())
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()) // Default to today
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
@@ -97,7 +98,7 @@ export function CalendarView({ progressList, revisionsList, questionsList, bookm
       )}>
         {/* Calendar Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-card/30 shrink-0">
-          <h2 className="text-2xl font-bold">{format(currentMonth, 'MMMM yyyy')} <span className="text-sm font-normal text-muted-foreground ml-4">Debug Qs: {questionsList.length}</span></h2>
+          <h2 className="text-2xl font-bold">{format(currentMonth, 'MMMM yyyy')} <span className="text-sm font-normal text-muted-foreground ml-4">Debug Qs: {questionsList.length} | DBG: {JSON.stringify(debugInfo)}</span></h2>
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setCurrentMonth(new Date())}>
               Today

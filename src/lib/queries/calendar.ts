@@ -5,6 +5,7 @@ export interface CalendarData {
   progressList: any[]
   revisionsList: any[]
   questionsList: QuestionWithProgress[]
+  debug?: any
 }
 
 export async function getCalendarData(): Promise<CalendarData> {
@@ -73,6 +74,12 @@ export async function getCalendarData(): Promise<CalendarData> {
   return {
     progressList: pData,
     revisionsList: rData,
-    questionsList
+    questionsList,
+    debug: {
+      qCount: questions?.length,
+      idCount: questionIds.length,
+      firstId: questionIds[0],
+      err: error?.message
+    }
   }
 }

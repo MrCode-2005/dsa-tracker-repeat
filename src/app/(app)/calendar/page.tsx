@@ -32,6 +32,7 @@ export default async function CalendarPage() {
         revisionsList={revisionsList}
         questionsList={questionsList}
         bookmarkFolders={bookmarkFolders}
+        debugInfo={calendarData.debug}
       />
     </div>
   )
