@@ -32,7 +32,12 @@ export async function getCalendarData(): Promise<CalendarData> {
   const questionIds = Array.from(new Set(validQuestionIds))
 
   if (questionIds.length === 0) {
-    return { progressList: pData, revisionsList: rData, questionsList: [] }
+    return { 
+      progressList: pData, 
+      revisionsList: rData, 
+      questionsList: [],
+      debug: { err: "EMPTY_IDS" }
+    }
   }
 
   // Fetch the actual questions in batches if needed, but supabase can handle large IN clauses
@@ -46,7 +51,12 @@ export async function getCalendarData(): Promise<CalendarData> {
   }
 
   if (!questions) {
-    return { progressList: pData, revisionsList: rData, questionsList: [] }
+    return { 
+      progressList: pData, 
+      revisionsList: rData, 
+      questionsList: [],
+      debug: { err: "QUESTIONS_NULL", errorObj: error }
+    }
   }
 
   const today = new Date().toISOString().split('T')[0]
