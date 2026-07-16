@@ -3,6 +3,7 @@
 import { useState, use } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { getFullProblemDetails } from '@/lib/queries/questions'
+import { getProfileClient } from '@/lib/queries/auth'
 import { ExternalLink, Loader2, PlayCircle, FolderOpen, Bookmark, CalendarCheck, CheckCircle2, Circle, ArrowLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,12 @@ export default function ProblemDetailsPage({ params }: PageProps) {
   const [isSavingNote, setIsSavingNote] = useState(false)
   const [videoUrls, setVideoUrls] = useState<Record<string, string>>({})
   const [isSavingUrls, setIsSavingUrls] = useState(false)
+
+  const { data: profile } = useQuery({
+    queryKey: ['profile'],
+    queryFn: getProfileClient,
+    staleTime: 1000 * 60 * 5, // 5 mins
+  })
 
   const { data: details, isLoading } = useQuery({
     queryKey: ['problem-details', questionId],
@@ -141,12 +148,30 @@ export default function ProblemDetailsPage({ params }: PageProps) {
                   </h2>
                   <p className="text-xs text-muted-foreground mt-1">Override the default search links for specific channels.</p>
                 </div>
-                <Button size="sm" variant="secondary" onClick={handleSaveVideoUrls} disabled={isSavingUrls}>
-                  {isSavingUrls ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Links'}
-                </Button>
+                <div className="flex gap-2">
+                  <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={async () => {
+                    if (confirm('Are you sure you want to reset all custom links? This will revert to default search links.')) {
+                      setVideoUrls({})
+                      if (questionId) {
+                        try {
+                          await updateVideoUrls(questionId, {})
+                          toast.success('Custom links reset!')
+                          queryClient.invalidateQueries({ queryKey: ['problem-details', questionId] })
+                        } catch {
+                          toast.error('Failed to reset links')
+                        }
+                      }
+                    }
+                  }}>
+                    Reset
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={handleSaveVideoUrls} disabled={isSavingUrls}>
+                    {isSavingUrls ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Links'}
+                  </Button>
+                </div>
               </div>
               <div className="space-y-4">
-                {['NeetCode', 'Striver', 'Nick White', 'default'].map(channel => (
+                {(profile?.youtube_channels || [{ name: 'NeetCode' }, { name: 'Destination FAANG' }, { name: 'Greg Hogg' }]).map(channel => channel.name).concat(['default']).map(channel => (
                   <div key={channel} className="flex flex-col gap-1">
                     <Label className="text-xs uppercase text-muted-foreground font-semibold tracking-wider">{channel === 'default' ? 'General Fallback' : channel}</Label>
                     <Input 
