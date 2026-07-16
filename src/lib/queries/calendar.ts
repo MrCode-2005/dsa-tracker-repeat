@@ -42,24 +42,32 @@ export async function getCalendarData(): Promise<CalendarData> {
     }
   }
 
-  // Fetch the actual questions in batches if needed, but supabase can handle large IN clauses
-  const { data: questions, error } = await supabase
-    .from('questions')
-    .select('*')
-    .in('id', questionIds)
-
-  if (error) {
-    console.error("GET CALENDAR DATA ERROR:", error)
-  }
-
-  if (!questions) {
-    return { 
-      progressList: pData, 
-      revisionsList: rData, 
-      questionsList: [],
-      debug: { err: "QUESTIONS_NULL", errorObj: error }
+  // Fetch the actual questions in batches to prevent "400 Bad Request" from URL length limits (Vercel/Nginx limit is ~8KB)
+  const chunkSize = 100
+  let allQuestions: any[] = []
+  
+  for (let i = 0; i < questionIds.length; i += chunkSize) {
+    const chunk = questionIds.slice(i, i + chunkSize)
+    const { data: chunkQuestions, error } = await supabase
+      .from('questions')
+      .select('*')
+      .in('id', chunk)
+      
+    if (error) {
+      console.error("GET CALENDAR DATA ERROR (Chunk):", error)
+      return { 
+        progressList: pData, 
+        revisionsList: rData, 
+        questionsList: []
+      }
+    }
+    
+    if (chunkQuestions) {
+      allQuestions = [...allQuestions, ...chunkQuestions]
     }
   }
+
+  const questions = allQuestions
 
   const today = new Date().toISOString().split('T')[0]
   
