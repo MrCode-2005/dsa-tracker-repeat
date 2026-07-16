@@ -8,7 +8,7 @@ import { ExternalLink, Loader2, PlayCircle, FolderOpen, Bookmark, CalendarCheck,
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { updateQuestionNote, updateVideoUrls } from '@/lib/actions/questions'
+import { updateQuestionNote, updateVideoUrls, resetToDefaultVideoUrls } from '@/lib/actions/questions'
 import { toast } from 'sonner'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Input } from '@/components/ui/input'
@@ -150,30 +150,20 @@ export default function ProblemDetailsPage({ params }: PageProps) {
                 </div>
                 <div className="flex gap-2">
                   <Button size="sm" variant="destructive" className="bg-red-500/20 text-red-500 hover:bg-red-500/30" onClick={async () => {
-                    if (confirm('Are you sure you want to clear all custom links? This will revert to default search links.')) {
-                      setVideoUrls({})
+                    if (confirm('Are you sure you want to reset all video links to their original hardcoded defaults?')) {
                       if (questionId) {
                         try {
-                          await updateVideoUrls(questionId, {})
-                          toast.success('Custom links cleared!')
+                          const defaultUrls = await resetToDefaultVideoUrls(questionId, details?.question.leetcode_number || null)
+                          setVideoUrls(defaultUrls)
+                          toast.success('Links reset to default!')
                           queryClient.invalidateQueries({ queryKey: ['problem-details', questionId] })
                         } catch {
-                          toast.error('Failed to clear links')
+                          toast.error('Failed to reset links')
                         }
                       }
                     }
                   }}>
-                    Clear Overrides
-                  </Button>
-                  <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => {
-                    if (details?.question?.video_urls) {
-                      setVideoUrls({ ...details.question.video_urls })
-                    } else {
-                      setVideoUrls({})
-                    }
-                    toast.success('Changes undone')
-                  }}>
-                    Undo Changes
+                    Reset to Default
                   </Button>
                   <Button size="sm" variant="secondary" onClick={handleSaveVideoUrls} disabled={isSavingUrls}>
                     {isSavingUrls ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Links'}

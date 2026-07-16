@@ -136,6 +136,29 @@ export async function updateVideoUrls(questionId: string, videoUrls: Record<stri
   revalidatePath('/', 'layout')
 }
 
+import defaultUrls from '@/lib/data/defaultVideoUrls.json'
+
+export async function resetToDefaultVideoUrls(questionId: string, leetcodeNumber: number | string | null) {
+  const supabase = await createClient()
+  await getSafeUser() // just check auth
+
+  let defaultData = {}
+  if (leetcodeNumber) {
+    const urls = (defaultUrls as Record<string, Record<string, string>>)[String(leetcodeNumber)]
+    if (urls) defaultData = urls
+  }
+
+  const { error } = await supabase
+    .from('questions')
+    .update({ video_urls: defaultData })
+    .eq('id', questionId)
+
+  if (error) throw error
+  revalidatePath('/', 'layout')
+  
+  return defaultData
+}
+
 export async function markRevisionComplete(revisionId: string, questionId: string) {
   const supabase = await createClient()
   const user = await getSafeUser()
