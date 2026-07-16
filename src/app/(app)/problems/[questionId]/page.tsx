@@ -149,14 +149,31 @@ export default function ProblemDetailsPage({ params }: PageProps) {
                   <p className="text-xs text-muted-foreground mt-1">Override the default search links for specific channels.</p>
                 </div>
                 <div className="flex gap-2">
+                  <Button size="sm" variant="destructive" className="bg-red-500/20 text-red-500 hover:bg-red-500/30" onClick={async () => {
+                    if (confirm('Are you sure you want to clear all custom links? This will revert to default search links.')) {
+                      setVideoUrls({})
+                      if (questionId) {
+                        try {
+                          await updateVideoUrls(questionId, {})
+                          toast.success('Custom links cleared!')
+                          queryClient.invalidateQueries({ queryKey: ['problem-details', questionId] })
+                        } catch {
+                          toast.error('Failed to clear links')
+                        }
+                      }
+                    }
+                  }}>
+                    Clear Overrides
+                  </Button>
                   <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => {
-                    if (details?.question.video_urls) {
-                      setVideoUrls(details.question.video_urls)
+                    if (details?.question?.video_urls) {
+                      setVideoUrls({ ...details.question.video_urls })
                     } else {
                       setVideoUrls({})
                     }
+                    toast.success('Changes undone')
                   }}>
-                    Reset
+                    Undo Changes
                   </Button>
                   <Button size="sm" variant="secondary" onClick={handleSaveVideoUrls} disabled={isSavingUrls}>
                     {isSavingUrls ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Links'}
