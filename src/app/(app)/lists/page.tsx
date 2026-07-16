@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Upload, Sparkles, List as ListIcon } from 'lucide-react'
+import { Plus, Upload, Sparkles, List as ListIcon, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -27,6 +27,7 @@ export default function ListsPage() {
   const [newDesc, setNewDesc] = useState('')
   const [pastedText, setPastedText] = useState('')
   const [isAdopting, setIsAdopting] = useState<string | null>(null)
+  const [isCreating, setIsCreating] = useState(false)
 
   const { data: lists, isLoading } = useQuery({
     queryKey: ['user-lists'],
@@ -34,7 +35,8 @@ export default function ListsPage() {
   })
 
   const handleCreate = async () => {
-    if (!newName.trim()) return
+    if (!newName.trim() || isCreating) return
+    setIsCreating(true)
     try {
       await createList(newName.trim(), newDesc.trim() || undefined, undefined, pastedText.trim() || undefined)
       queryClient.invalidateQueries({ queryKey: ['user-lists'] })
@@ -45,6 +47,8 @@ export default function ListsPage() {
       toast.success('List created!')
     } catch {
       toast.error('Failed to create list')
+    } finally {
+      setIsCreating(false)
     }
   }
 
@@ -208,12 +212,22 @@ export default function ListsPage() {
                 onChange={(e) => setPastedText(e.target.value)} 
                 placeholder="e.g. LeetCode 217 - Contains Duplicate&#10;LeetCode 219 - Contains Duplicate ll" 
                 className="mt-1.5 h-32" 
+                disabled={isCreating}
               />
               <p className="text-xs text-muted-foreground mt-1.5">
                 Paste a raw list of problems. We will automatically detect LeetCode numbers and add them.
               </p>
             </div>
-            <Button onClick={handleCreate} className="w-full" disabled={!newName.trim()}>Create List</Button>
+            <Button onClick={handleCreate} className="w-full" disabled={!newName.trim() || isCreating}>
+              {isCreating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Creating...
+                </>
+              ) : (
+                'Create List'
+              )}
+            </Button>
           </div>
         </DialogContent>
       </Dialog>
