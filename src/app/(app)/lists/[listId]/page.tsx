@@ -185,21 +185,26 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
               <div></div>
             </div>
 
-            {questions.map((q, idx) => (
-              <div
-                key={q.id}
-                id={`question-${q.id}`}
-                className={highlightedId === q.id ? 'ring-2 ring-primary rounded-lg transition-all' : ''}
-              >
-                <QuestionCard
-                  question={q}
-                  listId={listId}
-                  bookmarkFolders={bookmarkFolders || []}
-                  onUpdate={handleRefresh}
-                  index={idx + 1}
-                />
-              </div>
-            ))}
+            {questions.map((q, idx) => {
+              const originalIndex = allQuestions?.findIndex(aq => aq.id === q.id) ?? -1
+              const displayIndex = originalIndex >= 0 ? originalIndex + 1 : idx + 1
+
+              return (
+                <div
+                  key={q.id}
+                  id={`question-${q.id}`}
+                  className={highlightedId === q.id ? 'ring-2 ring-primary rounded-lg transition-all' : ''}
+                >
+                  <QuestionCard
+                    question={q}
+                    listId={listId}
+                    bookmarkFolders={bookmarkFolders || []}
+                    onUpdate={handleRefresh}
+                    index={displayIndex}
+                  />
+                </div>
+              )
+            })}
           </div>
         ) : (
           <div className="text-center py-12">
