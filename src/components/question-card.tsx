@@ -190,7 +190,7 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
           ? "flex flex-col gap-2.5 px-3 py-3" 
           : "grid grid-cols-1 items-center gap-3 md:gap-4 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px]"
       )}
-      onClick={() => router.push(`/problems/${question.id}`)}
+      onDoubleClick={() => router.push(`/problems/${question.id}`)}
     >
       
       {/* 1. Problem Column */}
