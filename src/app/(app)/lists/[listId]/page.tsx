@@ -78,6 +78,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
   const handleRefresh = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: ['list-questions'] })
     queryClient.invalidateQueries({ queryKey: ['list-questions-all'] })
+    queryClient.invalidateQueries({ queryKey: ['user-lists'] })
   }, [queryClient])
 
   const handleRandomPick = useCallback(() => {
@@ -130,6 +131,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
           <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={async () => {
             if (confirm('Delete this list?')) {
               await deleteList(listId)
+              queryClient.invalidateQueries({ queryKey: ['user-lists'] })
               toast.success('List deleted')
               router.push('/lists')
             }

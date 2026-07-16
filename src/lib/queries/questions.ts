@@ -57,22 +57,17 @@ export async function getListQuestions(
     questionQuery = questionQuery.overlaps('companies', filters.companies)
   }
 
-  const { data: questions } = await questionQuery
+  const [
+    { data: questions },
+    { data: progressData },
+    { data: revisionData }
+  ] = await Promise.all([
+    questionQuery,
+    supabase.from('user_question_progress').select('*').eq('user_id', user.id).in('question_id', questionIds),
+    supabase.from('revision_schedule').select('*').eq('user_id', user.id).in('question_id', questionIds)
+  ])
+
   if (!questions) return []
-
-  // Get progress for these questions
-  const { data: progressData } = await supabase
-    .from('user_question_progress')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('question_id', questions.map(q => q.id))
-
-  // Get revision data
-  const { data: revisionData } = await supabase
-    .from('revision_schedule')
-    .select('*')
-    .eq('user_id', user.id)
-    .in('question_id', questions.map(q => q.id))
 
   const progressMap = new Map(progressData?.map(p => [p.question_id, p]) || [])
   const revisionMap = new Map<string, { completed: number; total: number; current: typeof revisionData extends Array<infer T> ? T : never | null }>()
