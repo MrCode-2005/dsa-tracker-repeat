@@ -24,10 +24,12 @@ export async function getCalendarData(): Promise<CalendarData> {
   const pData = progressData || []
   const rData = revisionData || []
 
+  // Ensure we only query valid UUIDs to prevent Supabase "Bad Request" errors
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
   const validQuestionIds = [
     ...pData.map(p => p.question_id),
     ...rData.map(r => r.question_id)
-  ].filter(Boolean)
+  ].filter(id => id && typeof id === 'string' && uuidRegex.test(id))
 
   const questionIds = Array.from(new Set(validQuestionIds))
 
