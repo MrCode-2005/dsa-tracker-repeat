@@ -380,14 +380,14 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
               />
               <TooltipContent>{noteText ? 'View note' : 'Add note'}</TooltipContent>
             </Tooltip>
-            <PopoverContent className="w-80 bg-popover border-border">
-              <div className="space-y-2">
+            <PopoverContent className="w-auto min-w-80 max-w-[90vw] bg-popover border-border">
+              <div className="space-y-2 flex flex-col h-full w-full">
                 <label className="text-sm font-medium">Notes</label>
                 <Textarea
                   placeholder="Add your notes here..."
                   value={noteText}
                   onChange={(e) => handleNoteChange(e.target.value)}
-                  className="min-h-24 bg-background/50 text-sm"
+                  className="min-h-24 min-w-[280px] bg-background/50 text-sm resize"
                 />
                 <p className="text-xs text-muted-foreground">Auto-saved after you stop typing</p>
               </div>
