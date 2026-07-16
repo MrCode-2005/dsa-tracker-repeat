@@ -136,6 +136,8 @@ export interface Database {
           times_solved: number
           note: string | null
           is_bookmarked: boolean
+          confidence_rating: number | null
+          perceived_difficulty: 'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard' | null
           created_at: string
           updated_at: string
         }
@@ -149,6 +151,8 @@ export interface Database {
           times_solved?: number
           note?: string | null
           is_bookmarked?: boolean
+          confidence_rating?: number | null
+          perceived_difficulty?: 'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard' | null
           created_at?: string
           updated_at?: string
         }
@@ -162,6 +166,8 @@ export interface Database {
           times_solved?: number
           note?: string | null
           is_bookmarked?: boolean
+          confidence_rating?: number | null
+          perceived_difficulty?: 'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard' | null
           created_at?: string
           updated_at?: string
         }

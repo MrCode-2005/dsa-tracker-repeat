@@ -11,7 +11,8 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
 import { EditQuestionDialog } from '@/components/edit-question-dialog'
-import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision, cancelQuestionRevision, removeQuestionFromList } from '@/lib/actions/questions'
+import { ProblemDetailsDialog } from '@/components/problem-details-dialog'
+import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision, cancelQuestionRevision, removeQuestionFromList, updateConfidenceRating, updatePerceivedDifficulty } from '@/lib/actions/questions'
 import { Input } from '@/components/ui/input'
 import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
 import { toast } from 'sonner'
@@ -35,6 +36,9 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
   const [isCreatingFolder, setIsCreatingFolder] = useState(false)
   const [isSavingRevision, setIsSavingRevision] = useState(false)
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false)
+  const [confidenceRating, setConfidenceRating] = useState<number | null>(question.progress?.confidence_rating || null)
+  const [perceivedDifficulty, setPerceivedDifficulty] = useState<'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard' | null>(question.progress?.perceived_difficulty || null)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
 
   const { data: profile } = useQuery({
@@ -139,14 +143,47 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
       await removeQuestionFromList(listId, question.id)
       toast.success('Question removed')
       onUpdate?.()
-    } catch (e: any) {
-      toast.error(e.message || 'Failed to remove')
+    } catch {
+      toast.error('Failed to remove from list')
     }
   }, [listId, question.id, onUpdate])
 
+  const handleDifficultyChange = async (diff: 'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard') => {
+    const newVal = perceivedDifficulty === diff ? null : diff
+    setPerceivedDifficulty(newVal)
+    try {
+      await updatePerceivedDifficulty(question.id, newVal)
+    } catch {
+      setPerceivedDifficulty(perceivedDifficulty)
+      toast.error('Failed to update difficulty')
+    }
+  }
+
+  const handleRatingChange = async (val: number) => {
+    const newVal = confidenceRating === val ? null : val
+    setConfidenceRating(newVal)
+    try {
+      await updateConfidenceRating(question.id, newVal)
+    } catch {
+      setConfidenceRating(confidenceRating)
+      toast.error('Failed to update rating')
+    }
+  }
+
+  const difficultyColors = {
+    'too-easy': 'bg-cyan-500/20 text-cyan-500 border-cyan-500/50 hover:bg-cyan-500/30',
+    'easy': 'bg-emerald-500/20 text-emerald-500 border-emerald-500/50 hover:bg-emerald-500/30',
+    'moderate': 'bg-yellow-500/20 text-yellow-500 border-yellow-500/50 hover:bg-yellow-500/30',
+    'hard': 'bg-orange-500/20 text-orange-500 border-orange-500/50 hover:bg-orange-500/30',
+    'very-hard': 'bg-red-500/20 text-red-500 border-red-500/50 hover:bg-red-500/30',
+  }
+
   return (
     <>
-    <div className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_auto_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80">
+    <div 
+      className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80 cursor-pointer"
+      onDoubleClick={() => setIsDetailsOpen(true)}
+    >
       
       {/* 1. Problem Column */}
       <div className="flex items-center gap-3 min-w-0">
@@ -164,7 +201,7 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         )}
         {/* Title */}
         <span className={cn(
-          'text-sm font-medium truncate',
+          'text-sm font-medium truncate group-hover:text-primary transition-colors',
           isSolved && 'text-muted-foreground line-through decoration-muted-foreground/30'
         )}>
           {question.title}
@@ -178,8 +215,90 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
       </div>
 
       {/* Action Columns - Desktop Grid / Mobile Flex */}
-      <div className="flex items-center gap-2 md:contents">
+      <div className="flex items-center gap-2 md:contents" onDoubleClick={(e) => e.stopPropagation()}>
         
+        {/* NEW: Perceived Difficulty */}
+        <div className="flex justify-center">
+          <Popover>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <PopoverTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn("w-6 h-6 rounded-full border transition-colors", 
+                          perceivedDifficulty ? difficultyColors[perceivedDifficulty] : "border-border text-muted-foreground hover:bg-muted"
+                        )}
+                      >
+                        <span className="sr-only">Set difficulty</span>
+                      </Button>
+                    }
+                  >
+                    <div />
+                  </PopoverTrigger>
+                }
+              >
+                <div />
+              </TooltipTrigger>
+              <TooltipContent>How difficult was this?</TooltipContent>
+            </Tooltip>
+            <PopoverContent className="w-auto p-2 flex gap-1 bg-card/95 backdrop-blur-xl border-border" align="center">
+              {(['too-easy', 'easy', 'moderate', 'hard', 'very-hard'] as const).map(diff => (
+                <Tooltip key={diff}>
+                  <TooltipTrigger
+                    render={
+                      <button
+                        onClick={() => handleDifficultyChange(diff)}
+                        className={cn("w-6 h-6 rounded-full border transition-all hover:scale-110", difficultyColors[diff], perceivedDifficulty === diff && "ring-2 ring-offset-2 ring-offset-background ring-primary")}
+                      />
+                    }
+                  >
+                    <div />
+                  </TooltipTrigger>
+                  <TooltipContent className="capitalize">{diff.replace('-', ' ')}</TooltipContent>
+                </Tooltip>
+              ))}
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {/* NEW: Confidence Rating */}
+        <div className="flex justify-center">
+          <DropdownMenu>
+            <Tooltip>
+              <TooltipTrigger
+                render={
+                  <DropdownMenuTrigger
+                    render={
+                      <Button variant="ghost" className="h-7 w-11 px-0 py-0 text-xs font-mono font-medium hover:bg-muted hover:text-primary transition-colors border border-transparent hover:border-border/50">
+                        {confidenceRating !== null ? `${confidenceRating}/10` : '-/10'}
+                      </Button>
+                    }
+                  >
+                    <div />
+                  </DropdownMenuTrigger>
+                }
+              >
+                <div />
+              </TooltipTrigger>
+              <TooltipContent>Confidence Rating</TooltipContent>
+            </Tooltip>
+            <DropdownMenuContent align="center" className="min-w-[60px]">
+              {[10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0].map(val => (
+                <DropdownMenuItem 
+                  key={val} 
+                  className={cn("justify-center font-mono text-xs", confidenceRating === val && "bg-primary/20 text-primary")}
+                  onClick={() => handleRatingChange(val)}
+                >
+                  {val}/10
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
         {/* 2. Video */}
         <div className="flex flex-wrap items-center justify-center gap-1">
           {youtubeChannels.map((channel, i) => {
@@ -464,6 +583,13 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
       onOpenChange={setIsEditOpen}
       question={question as any}
       onSuccess={onUpdate}
+    />
+    
+    <ProblemDetailsDialog
+      questionId={question.id}
+      open={isDetailsOpen}
+      onOpenChange={setIsDetailsOpen}
+      onUpdate={onUpdate}
     />
     </>
   )

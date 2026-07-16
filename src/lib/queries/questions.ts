@@ -104,6 +104,54 @@ export async function getListQuestions(
   return result
 }
 
+import type { Database } from '@/lib/types/database'
+
+export interface ProblemDetailsData {
+  question: QuestionWithProgress
+  revisions: Database['public']['Tables']['revision_schedule']['Row'][]
+  lists: Database['public']['Tables']['lists']['Row'][]
+  bookmarks: Database['public']['Tables']['bookmark_folders']['Row'][]
+}
+
+export async function getFullProblemDetails(questionId: string): Promise<ProblemDetailsData | null> {
+  const supabase = createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return null
+
+  const [
+    { data: questionData },
+    { data: progressData },
+    { data: revisionData },
+    { data: listQuestions },
+    { data: bookmarkItems }
+  ] = await Promise.all([
+    supabase.from('questions').select('*').eq('id', questionId).single(),
+    supabase.from('user_question_progress').select('*').eq('user_id', user.id).eq('question_id', questionId).maybeSingle(),
+    supabase.from('revision_schedule').select('*').eq('user_id', user.id).eq('question_id', questionId).order('scheduled_for', { ascending: true }),
+    supabase.from('list_questions').select('lists(*)').eq('question_id', questionId),
+    supabase.from('bookmark_items').select('bookmark_folders(*)').eq('user_id', user.id).eq('question_id', questionId)
+  ])
+
+  if (!questionData) return null
+
+  // Ensure lists and bookmark_folders are properly typed/extracted
+  // Supabase returns an array of objects where the foreign key table is the key
+  const lists = (listQuestions?.map(lq => lq.lists).filter(Boolean) || []) as any[]
+  const bookmarks = (bookmarkItems?.map(bi => bi.bookmark_folders).filter(Boolean) || []) as any[]
+
+  const question: QuestionWithProgress = {
+    ...questionData,
+    progress: progressData || null,
+  }
+
+  return {
+    question,
+    revisions: revisionData || [],
+    lists,
+    bookmarks,
+  }
+}
+
 export async function getAllCompanies(): Promise<string[]> {
   const supabase = createClient()
   const { data } = await supabase

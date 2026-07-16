@@ -81,6 +81,61 @@ export async function toggleQuestionSolved(questionId: string) {
   revalidatePath('/', 'layout')
 }
 
+export async function updateConfidenceRating(questionId: string, rating: number | null) {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  // UPSERT pattern to ensure row exists
+  const { error } = await supabase
+    .from('user_question_progress')
+    .upsert(
+      {
+        user_id: user.id,
+        question_id: questionId,
+        confidence_rating: rating,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,question_id' }
+    )
+
+  if (error) throw error
+  revalidatePath('/', 'layout')
+}
+
+export async function updatePerceivedDifficulty(questionId: string, difficulty: 'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard' | null) {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  // UPSERT pattern to ensure row exists
+  const { error } = await supabase
+    .from('user_question_progress')
+    .upsert(
+      {
+        user_id: user.id,
+        question_id: questionId,
+        perceived_difficulty: difficulty,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,question_id' }
+    )
+
+  if (error) throw error
+  revalidatePath('/', 'layout')
+}
+
+export async function updateVideoUrls(questionId: string, videoUrls: Record<string, string>) {
+  const supabase = await createClient()
+  await getSafeUser() // just check auth
+
+  const { error } = await supabase
+    .from('questions')
+    .update({ video_urls: videoUrls })
+    .eq('id', questionId)
+
+  if (error) throw error
+  revalidatePath('/', 'layout')
+}
+
 export async function markRevisionComplete(revisionId: string, questionId: string) {
   const supabase = await createClient()
   const user = await getSafeUser()
