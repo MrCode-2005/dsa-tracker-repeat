@@ -90,11 +90,15 @@ export default function ProblemDetailsPage({ params }: PageProps) {
       {/* Header */}
       <div className="px-6 md:px-8 py-6 border-b border-border bg-card/30 flex flex-col md:flex-row gap-4 items-start md:items-center justify-between shrink-0">
         <div className="flex items-center gap-4">
-          <Link href="/">
-            <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-muted">
-              <ArrowLeft className="w-5 h-5" />
-            </Button>
-          </Link>
+          <Button variant="ghost" size="icon" className="shrink-0 rounded-full hover:bg-muted" onClick={() => {
+            if (window.opener) {
+              window.close()
+            } else {
+              window.history.back()
+            }
+          }}>
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
           {details.question.leetcode_number && (
             <span className="font-mono text-muted-foreground bg-muted px-2 py-1 rounded-md text-sm shrink-0">
               {details.question.leetcode_number}
