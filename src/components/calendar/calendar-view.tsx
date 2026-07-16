@@ -183,7 +183,7 @@ export function CalendarView({ progressList, revisionsList, questionsList, bookm
         <div className="flex items-center justify-between p-4 border-b border-border bg-muted/30">
           <div>
             <h3 className="font-semibold text-lg">
-              {selectedDate ? format(selectedDate, 'MMMM d, yyyy') : 'Details'}
+              {selectedDate ? format(selectedDate, 'EEEE, MMMM d, yyyy') : 'Details'}
             </h3>
             {selectedDate && isToday(selectedDate) && (
               <span className="text-xs text-primary font-medium">Today</span>
