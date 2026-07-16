@@ -47,7 +47,9 @@ export async function getProgressByDifficulty() {
   const difficultyMap = new Map<string, { solved: number; total: number }>()
 
   data.forEach(item => {
-    const difficulty = (item.question as unknown as { difficulty: string })?.difficulty || 'Unknown'
+    const difficulty = (item.question as unknown as { difficulty: string })?.difficulty
+    if (!difficulty || difficulty === 'Unknown') return // Skip questions without a valid difficulty
+    
     const existing = difficultyMap.get(difficulty) || { solved: 0, total: 0 }
     existing.total++
     if (item.status === 'solved') existing.solved++
