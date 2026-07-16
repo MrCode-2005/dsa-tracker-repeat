@@ -4,13 +4,13 @@ import type { QuestionWithProgress } from '@/lib/types/database'
 export interface CalendarData {
   progressList: any[]
   revisionsList: any[]
-  questionsMap: Map<string, QuestionWithProgress>
+  questionsList: QuestionWithProgress[]
 }
 
 export async function getCalendarData(): Promise<CalendarData> {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
-  if (!user) return { progressList: [], revisionsList: [], questionsMap: new Map() }
+  if (!user) return { progressList: [], revisionsList: [], questionsList: [] }
 
   const [
     { data: progressData },
@@ -23,23 +23,29 @@ export async function getCalendarData(): Promise<CalendarData> {
   const pData = progressData || []
   const rData = revisionData || []
 
-  const questionIds = new Set([
+  const validQuestionIds = [
     ...pData.map(p => p.question_id),
     ...rData.map(r => r.question_id)
-  ])
+  ].filter(Boolean)
 
-  if (questionIds.size === 0) {
-    return { progressList: pData, revisionsList: rData, questionsMap: new Map() }
+  const questionIds = Array.from(new Set(validQuestionIds))
+
+  if (questionIds.length === 0) {
+    return { progressList: pData, revisionsList: rData, questionsList: [] }
   }
 
   // Fetch the actual questions in batches if needed, but supabase can handle large IN clauses
-  const { data: questions } = await supabase
+  const { data: questions, error } = await supabase
     .from('questions')
     .select('*')
-    .in('id', Array.from(questionIds))
+    .in('id', questionIds)
+
+  if (error) {
+    console.error("GET CALENDAR DATA ERROR:", error)
+  }
 
   if (!questions) {
-    return { progressList: pData, revisionsList: rData, questionsMap: new Map() }
+    return { progressList: pData, revisionsList: rData, questionsList: [] }
   }
 
   const today = new Date().toISOString().split('T')[0]
@@ -57,20 +63,16 @@ export async function getCalendarData(): Promise<CalendarData> {
     revisionStatsMap.set(q.id, { completed, total: revisions.length, current: currentDue })
   })
 
-  const questionsMap = new Map<string, QuestionWithProgress>()
-  
-  questions.forEach(q => {
-    questionsMap.set(q.id, {
-      ...q,
-      progress: progressMap.get(q.id) || null,
-      revision_count: revisionStatsMap.get(q.id) || { completed: 0, total: 0 },
-      current_revision: revisionStatsMap.get(q.id)?.current || null,
-    })
-  })
+  const questionsList = questions.map(q => ({
+    ...q,
+    progress: progressMap.get(q.id) || null,
+    revision_count: revisionStatsMap.get(q.id) || { completed: 0, total: 0 },
+    current_revision: revisionStatsMap.get(q.id)?.current || null,
+  }))
 
   return {
     progressList: pData,
     revisionsList: rData,
-    questionsMap
+    questionsList
   }
 }
