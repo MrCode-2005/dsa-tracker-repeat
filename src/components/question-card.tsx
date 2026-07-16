@@ -185,16 +185,16 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
     <>
     <div 
       className={cn(
-        "group grid grid-cols-1 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80 cursor-pointer",
+        "group px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80 cursor-pointer",
         isCompact 
-          ? "gap-2 md:grid-cols-[minmax(0,1fr)_32px_44px_36px_84px_36px_80px] px-2 py-2" 
-          : "gap-3 md:gap-4 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px]"
+          ? "flex flex-col gap-2.5 px-3 py-3" 
+          : "grid grid-cols-1 items-center gap-3 md:gap-4 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px]"
       )}
       onClick={() => router.push(`/problems/${question.id}`)}
     >
       
       {/* 1. Problem Column */}
-      <div className="flex items-center gap-3 min-w-0">
+      <div className={cn("flex items-center gap-3 min-w-0", isCompact && "w-full")}>
         {/* Row index number */}
         {index !== undefined && (
           <span className="flex-shrink-0 font-mono text-xs text-muted-foreground/50 w-5 text-right select-none">
@@ -216,14 +216,20 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
         </span>
         {/* Topic badge */}
         {question.topic && (
-          <span className="hidden lg:inline-flex text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md truncate max-w-32 flex-shrink-0">
+          <span className={cn(
+            "text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md truncate max-w-32 flex-shrink-0",
+            !isCompact && "hidden lg:inline-flex"
+          )}>
             {question.topic}
           </span>
         )}
       </div>
 
       {/* Action Columns - Desktop Grid / Mobile Flex */}
-      <div className="flex items-center gap-2 md:contents" onDoubleClick={(e) => e.stopPropagation()}>
+      <div className={cn(
+        "flex items-center",
+        isCompact ? "w-full flex-wrap gap-x-4 gap-y-2" : "gap-2 md:contents"
+      )} onDoubleClick={(e) => e.stopPropagation()}>
         
         {/* NEW: Perceived Difficulty */}
         <div className="flex justify-center">
