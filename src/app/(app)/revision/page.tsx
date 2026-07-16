@@ -11,22 +11,26 @@ import { QuestionListSkeleton } from '@/components/loading-skeletons'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { getRevisionsDue, getRevisionsUpcoming, getRevisionStats } from '@/lib/queries/revisions'
 
-type DueRange = 'today' | 'week' | 'month' | 'year'
-type UpcomingRange = 'today' | 'week' | 'month'
+type DueRange = 'today' | 'week' | 'month' | 'year' | 'custom'
+type UpcomingRange = 'today' | 'week' | 'month' | 'custom'
 
 export default function RevisionPage() {
   const queryClient = useQueryClient()
   const [dueRange, setDueRange] = useState<DueRange>('today')
   const [upcomingRange, setUpcomingRange] = useState<UpcomingRange>('week')
+  
+  const today = new Date().toISOString().split('T')[0]
+  const [customStart, setCustomStart] = useState(today)
+  const [customEnd, setCustomEnd] = useState(today)
 
   const { data: revisions, isLoading: revisionsLoading } = useQuery({
-    queryKey: ['revisions-due', dueRange],
-    queryFn: () => getRevisionsDue(dueRange),
+    queryKey: ['revisions-due', dueRange, dueRange === 'custom' ? customStart : null, dueRange === 'custom' ? customEnd : null],
+    queryFn: () => getRevisionsDue(dueRange, customStart, customEnd),
   })
 
   const { data: upcoming, isLoading: upcomingLoading } = useQuery({
-    queryKey: ['revisions-upcoming', upcomingRange],
-    queryFn: () => getRevisionsUpcoming(upcomingRange),
+    queryKey: ['revisions-upcoming', upcomingRange, upcomingRange === 'custom' ? customStart : null, upcomingRange === 'custom' ? customEnd : null],
+    queryFn: () => getRevisionsUpcoming(upcomingRange, customStart, customEnd),
   })
 
   const { data: stats } = useQuery({
@@ -96,16 +100,26 @@ export default function RevisionPage() {
       {/* Due Section */}
       <ErrorBoundary>
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <h2 className="text-lg font-semibold">Due Revisions</h2>
-            <Tabs value={dueRange} onValueChange={(v) => setDueRange(v as DueRange)}>
-              <TabsList className="h-8">
-                <TabsTrigger value="today" className="text-xs px-3">Today</TabsTrigger>
-                <TabsTrigger value="week" className="text-xs px-3">This Week</TabsTrigger>
-                <TabsTrigger value="month" className="text-xs px-3">This Month</TabsTrigger>
-                <TabsTrigger value="year" className="text-xs px-3">This Year</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-4">
+              {dueRange === 'custom' && (
+                <div className="flex items-center gap-2">
+                  <input type="date" className="h-8 rounded-md border border-border bg-transparent px-2 text-xs" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+                  <span className="text-muted-foreground text-xs">to</span>
+                  <input type="date" className="h-8 rounded-md border border-border bg-transparent px-2 text-xs" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+                </div>
+              )}
+              <Tabs value={dueRange} onValueChange={(v) => setDueRange(v as DueRange)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="today" className="text-xs px-3">Today</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs px-3">This Week</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs px-3">This Month</TabsTrigger>
+                  <TabsTrigger value="year" className="text-xs px-3">This Year</TabsTrigger>
+                  <TabsTrigger value="custom" className="text-xs px-3">Custom</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
           {revisionsLoading ? (
@@ -148,15 +162,25 @@ export default function RevisionPage() {
       {/* Upcoming Section */}
       <ErrorBoundary>
         <div>
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
             <h2 className="text-lg font-semibold">Upcoming Revisions</h2>
-            <Tabs value={upcomingRange} onValueChange={(v) => setUpcomingRange(v as UpcomingRange)}>
-              <TabsList className="h-8">
-                <TabsTrigger value="today" className="text-xs px-3">Today</TabsTrigger>
-                <TabsTrigger value="week" className="text-xs px-3">This Week</TabsTrigger>
-                <TabsTrigger value="month" className="text-xs px-3">This Month</TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex items-center gap-4">
+              {upcomingRange === 'custom' && (
+                <div className="flex items-center gap-2">
+                  <input type="date" className="h-8 rounded-md border border-border bg-transparent px-2 text-xs" value={customStart} onChange={(e) => setCustomStart(e.target.value)} />
+                  <span className="text-muted-foreground text-xs">to</span>
+                  <input type="date" className="h-8 rounded-md border border-border bg-transparent px-2 text-xs" value={customEnd} onChange={(e) => setCustomEnd(e.target.value)} />
+                </div>
+              )}
+              <Tabs value={upcomingRange} onValueChange={(v) => setUpcomingRange(v as UpcomingRange)}>
+                <TabsList className="h-8">
+                  <TabsTrigger value="today" className="text-xs px-3">Today</TabsTrigger>
+                  <TabsTrigger value="week" className="text-xs px-3">This Week</TabsTrigger>
+                  <TabsTrigger value="month" className="text-xs px-3">This Month</TabsTrigger>
+                  <TabsTrigger value="custom" className="text-xs px-3">Custom</TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
           </div>
 
           {upcomingLoading ? (

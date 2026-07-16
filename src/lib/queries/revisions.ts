@@ -74,12 +74,13 @@ export async function getRevisionsDue(range: 'today' | 'week' | 'month' | 'year'
   }
 }
 
-export async function getRevisionsUpcoming(range: 'today' | 'week' | 'month' = 'week'): Promise<RevisionWithQuestion[]> {
+export async function getRevisionsUpcoming(range: 'today' | 'week' | 'month' | 'custom' = 'week', customStart?: string, customEnd?: string): Promise<RevisionWithQuestion[]> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return []
 
   const today = new Date().toISOString().split('T')[0]
+  let startDate = today
   let endDate = today
 
   if (range === 'week') {
@@ -90,16 +91,25 @@ export async function getRevisionsUpcoming(range: 'today' | 'week' | 'month' = '
     const d = new Date()
     d.setMonth(d.getMonth() + 1)
     endDate = d.toISOString().split('T')[0]
+  } else if (range === 'custom' && customStart && customEnd) {
+    startDate = customStart
+    endDate = customEnd
   }
 
-  const { data } = await supabase
+  let query = supabase
     .from('revision_schedule')
     .select('*, question:questions(*)')
     .eq('user_id', user.id)
     .eq('completed', false)
-    .gt('scheduled_for', today)
-    .lte('scheduled_for', endDate)
     .order('scheduled_for', { ascending: true })
+
+  if (range === 'custom') {
+    query = query.gte('scheduled_for', startDate).lte('scheduled_for', endDate)
+  } else {
+    query = query.gt('scheduled_for', today).lte('scheduled_for', endDate)
+  }
+
+  const { data } = await query
 
   return (data?.map(r => ({
     ...r,
