@@ -1,7 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { QuestionCard } from '@/components/question-card'
 import type { QuestionWithProgress } from '@/lib/types/database'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import { createClient } from '@/lib/supabase/client'
 import { Loader2 } from 'lucide-react'
 
@@ -109,7 +108,7 @@ export function DayDetails({ date, activity, progressList, revisionsList, bookma
   }
 
   return (
-    <ScrollArea className="flex-1">
+    <div className="flex-1 overflow-y-auto min-h-0">
       <div className="p-4 space-y-6 pb-20">
         
         <div className="w-full space-y-4">
@@ -191,6 +190,6 @@ export function DayDetails({ date, activity, progressList, revisionsList, bookma
           
         </div>
       </div>
-    </ScrollArea>
+    </div>
   )
 }
