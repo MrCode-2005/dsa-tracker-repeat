@@ -7,8 +7,11 @@ import {
   List,
   RotateCcw,
   Bookmark,
-  BarChart3,
+  ListTodo,
   Settings,
+  History,
+  BarChart,
+  Calendar,
   Zap,
   Menu,
   X,
@@ -18,10 +21,11 @@ import { cn } from '@/lib/utils'
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/lists', label: 'Lists', icon: List },
-  { href: '/revision', label: 'Revision Hub', icon: RotateCcw },
+  { href: '/calendar', label: 'Calendar', icon: Calendar },
+  { href: '/lists', label: 'Lists', icon: ListTodo },
+  { href: '/revision', label: 'Revision Hub', icon: History },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
-  { href: '/analytics', label: 'Analytics', icon: BarChart3 },
+  { href: '/analytics', label: 'Analytics', icon: BarChart },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
