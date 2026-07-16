@@ -149,18 +149,11 @@ export default function ProblemDetailsPage({ params }: PageProps) {
                   <p className="text-xs text-muted-foreground mt-1">Override the default search links for specific channels.</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={async () => {
-                    if (confirm('Are you sure you want to reset all custom links? This will revert to default search links.')) {
+                  <Button size="sm" variant="ghost" className="text-muted-foreground hover:text-foreground" onClick={() => {
+                    if (details?.question.video_urls) {
+                      setVideoUrls(details.question.video_urls)
+                    } else {
                       setVideoUrls({})
-                      if (questionId) {
-                        try {
-                          await updateVideoUrls(questionId, {})
-                          toast.success('Custom links reset!')
-                          queryClient.invalidateQueries({ queryKey: ['problem-details', questionId] })
-                        } catch {
-                          toast.error('Failed to reset links')
-                        }
-                      }
                     }
                   }}>
                     Reset
