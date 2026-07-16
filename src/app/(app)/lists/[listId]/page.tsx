@@ -1,9 +1,9 @@
 'use client'
 
-import { use, useState, useCallback, useMemo } from 'react'
+import { use, useState, useCallback, useMemo, useEffect } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useSearchParams } from 'next/navigation'
-import { ArrowLeft, Trash2 } from 'lucide-react'
+import { ArrowLeft, Trash2, Pencil, Check, X } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
@@ -14,11 +14,12 @@ import { ErrorBoundary } from '@/components/error-boundary'
 import { getListQuestions, getAllCompanies, type QuestionFilters } from '@/lib/queries/questions'
 import { getListDetails } from '@/lib/queries/lists'
 import { getBookmarkFolders } from '@/lib/queries/bookmarks'
-import { deleteList } from '@/lib/actions/lists'
+import { deleteList, updateListName } from '@/lib/actions/lists'
 import { AddQuestionDialog } from './add-question-dialog'
 import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { SessionProgress } from '@/components/session-progress'
+import { Input } from '@/components/ui/input'
 
 export default function ListDetailPage({ params }: { params: Promise<{ listId: string }> }) {
   const { listId } = use(params)
@@ -26,6 +27,10 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
   const queryClient = useQueryClient()
   const router = useRouter()
   const [highlightedId, setHighlightedId] = useState<string | null>(null)
+  
+  const [isEditingTitle, setIsEditingTitle] = useState(false)
+  const [editedTitle, setEditedTitle] = useState('')
+  const [isSavingTitle, setIsSavingTitle] = useState(false)
 
   const filters: QuestionFilters = {
     search: searchParams.get('search') || '',
@@ -39,6 +44,32 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
     queryKey: ['list-details', listId],
     queryFn: () => getListDetails(listId),
   })
+
+  // Sync edited title when details load
+  useEffect(() => {
+    if (listDetails?.name && !isEditingTitle) {
+      setEditedTitle(listDetails.name)
+    }
+  }, [listDetails?.name, isEditingTitle])
+
+  const handleSaveTitle = async () => {
+    if (!editedTitle.trim() || editedTitle === listDetails?.name) {
+      setIsEditingTitle(false)
+      return
+    }
+    setIsSavingTitle(true)
+    try {
+      await updateListName(listId, editedTitle)
+      queryClient.invalidateQueries({ queryKey: ['list-details', listId] })
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] })
+      toast.success('List name updated')
+      setIsEditingTitle(false)
+    } catch (error) {
+      toast.error('Failed to update name')
+    } finally {
+      setIsSavingTitle(false)
+    }
+  }
 
   const { data: questions, isLoading } = useQuery({
     queryKey: ['list-questions', listId, filters],
@@ -122,7 +153,42 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
           <Button variant="ghost" size="icon" className="h-8 w-8" render={<Link href="/lists" />} nativeButton={false}>
             <ArrowLeft className="w-4 h-4" />
           </Button>
-          <h1 className="text-2xl font-bold flex-1">{listDetails?.name || 'Loading...'}</h1>
+          
+          {isEditingTitle ? (
+            <div className="flex-1 flex items-center gap-2">
+              <Input 
+                value={editedTitle}
+                onChange={(e) => setEditedTitle(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSaveTitle()
+                  if (e.key === 'Escape') setIsEditingTitle(false)
+                }}
+                disabled={isSavingTitle}
+                autoFocus
+                className="max-w-[300px] h-9 text-lg font-bold"
+              />
+              <Button size="icon" variant="ghost" className="h-8 w-8 text-emerald-500" onClick={handleSaveTitle} disabled={isSavingTitle}>
+                <Check className="w-4 h-4" />
+              </Button>
+              <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setIsEditingTitle(false)} disabled={isSavingTitle}>
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          ) : (
+            <div className="flex-1 flex items-center gap-2 group">
+              <h1 className="text-2xl font-bold">{listDetails?.name || 'Loading...'}</h1>
+              {listDetails?.source_type === 'custom' && (
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => setIsEditingTitle(true)}
+                >
+                  <Pencil className="w-3.5 h-3.5 text-muted-foreground" />
+                </Button>
+              )}
+            </div>
+          )}
           
           {listDetails?.source_type === 'custom' && (
             <AddQuestionDialog listId={listId} onSuccess={handleRefresh} />

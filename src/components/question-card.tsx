@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback, useRef, useEffect } from 'react'
-import { ExternalLink, CirclePlay, StickyNote, Bookmark, Check, Star, RotateCcw, MoreHorizontal, Pencil, Trash2 } from 'lucide-react'
+import { ExternalLink, CirclePlay, StickyNote, Bookmark, Check, Star, RotateCcw, MoreHorizontal, Pencil, Trash2, ArrowUp, ArrowDown, FolderInput } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -9,15 +9,18 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover'
 import { Textarea } from '@/components/ui/textarea'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent, DropdownMenuPortal } from '@/components/ui/dropdown-menu'
 import { EditQuestionDialog } from '@/components/edit-question-dialog'
 import { toggleQuestionSolved, updateQuestionNote, toggleBookmarkInFolder, createBookmarkFolder, scheduleQuestionRevision, cancelQuestionRevision, removeQuestionFromList, updateConfidenceRating, updatePerceivedDifficulty } from '@/lib/actions/questions'
+import { moveListQuestion, migrateListQuestion } from '@/lib/actions/lists'
 import { Input } from '@/components/ui/input'
 import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 import { getProfileClient } from '@/lib/queries/auth'
+import { getUserLists } from '@/lib/queries/lists'
 import { useRouter } from 'next/navigation'
+import { useQueryClient } from '@tanstack/react-query'
 
 interface QuestionCardProps {
   question: QuestionWithProgress
@@ -41,6 +44,14 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
   const [confidenceRating, setConfidenceRating] = useState<number | null>(question.progress?.confidence_rating || null)
   const [perceivedDifficulty, setPerceivedDifficulty] = useState<'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard' | null>(question.progress?.perceived_difficulty || null)
   const debounceRef = useRef<NodeJS.Timeout | null>(null)
+  const queryClient = useQueryClient()
+
+  const { data: userLists } = useQuery({
+    queryKey: ['user-lists'],
+    queryFn: getUserLists,
+    staleTime: 1000 * 60 * 5,
+    enabled: !!listId // Only fetch if we are inside a list (need it for migration)
+  })
 
   const { data: profile } = useQuery({
     queryKey: ['profile'],
@@ -148,6 +159,31 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
       toast.error('Failed to remove from list')
     }
   }, [listId, question.id, onUpdate])
+
+  const handleMoveQuestion = useCallback(async (direction: 'up' | 'down') => {
+    if (!listId) return
+    try {
+      await moveListQuestion(listId, question.id, direction)
+      queryClient.invalidateQueries({ queryKey: ['list-questions', listId] })
+      onUpdate?.()
+    } catch {
+      toast.error(`Failed to move question ${direction}`)
+    }
+  }, [listId, question.id, queryClient, onUpdate])
+
+  const handleMigrateQuestion = useCallback(async (newListId: string) => {
+    if (!listId) return
+    try {
+      await migrateListQuestion(listId, newListId, question.id)
+      queryClient.invalidateQueries({ queryKey: ['list-questions', listId] })
+      queryClient.invalidateQueries({ queryKey: ['list-questions', newListId] })
+      queryClient.invalidateQueries({ queryKey: ['user-lists'] })
+      onUpdate?.()
+      toast.success('Question moved to new list')
+    } catch {
+      toast.error('Failed to move question')
+    }
+  }, [listId, question.id, queryClient, onUpdate])
 
   const handleDifficultyChange = async (diff: 'too-easy' | 'easy' | 'moderate' | 'hard' | 'very-hard') => {
     const newVal = perceivedDifficulty === diff ? null : diff
@@ -586,6 +622,34 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
                 </DropdownMenuItem>
                 {listId && (
                   <>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleMoveQuestion('up')} className="cursor-pointer">
+                      <ArrowUp className="w-4 h-4 mr-2" />
+                      Move Up
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleMoveQuestion('down')} className="cursor-pointer">
+                      <ArrowDown className="w-4 h-4 mr-2" />
+                      Move Down
+                    </DropdownMenuItem>
+                    
+                    {userLists && userLists.length > 1 && (
+                      <DropdownMenuSub>
+                        <DropdownMenuSubTrigger className="cursor-pointer">
+                          <FolderInput className="w-4 h-4 mr-2" />
+                          Move to List...
+                        </DropdownMenuSubTrigger>
+                        <DropdownMenuPortal>
+                          <DropdownMenuSubContent className="bg-popover border-border">
+                            {userLists.filter(l => l.id !== listId).map(list => (
+                              <DropdownMenuItem key={list.id} onClick={() => handleMigrateQuestion(list.id)} className="cursor-pointer">
+                                {list.name}
+                              </DropdownMenuItem>
+                            ))}
+                          </DropdownMenuSubContent>
+                        </DropdownMenuPortal>
+                      </DropdownMenuSub>
+                    )}
+                    
                     <DropdownMenuSeparator />
                     <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" onClick={handleRemoveFromList}>
                       <Trash2 className="w-4 h-4 mr-2" />

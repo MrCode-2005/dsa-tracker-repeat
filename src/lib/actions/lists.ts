@@ -327,3 +327,114 @@ export async function addQuestionToList(listId: string, questionId: string) {
 
   revalidatePath(`/lists/${listId}`)
 }
+
+export async function updateListName(listId: string, newName: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  const { error } = await supabase
+    .from('lists')
+    .update({ name: newName })
+    .eq('id', listId)
+    .eq('user_id', user.id)
+
+  if (error) throw error
+  revalidatePath('/lists')
+  revalidatePath(`/lists/${listId}`)
+}
+
+export async function moveListQuestion(listId: string, questionId: string, direction: 'up' | 'down') {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  // Verify list ownership
+  const { data: list } = await supabase.from('lists').select('id').eq('id', listId).eq('user_id', user.id).single()
+  if (!list) throw new Error('List not found')
+
+  // Get all questions in the list ordered by position
+  const { data: questions, error } = await supabase
+    .from('list_questions')
+    .select('id, question_id, position')
+    .eq('list_id', listId)
+    .order('position', { ascending: true })
+
+  if (error || !questions) throw error || new Error('Could not fetch questions')
+
+  const currentIndex = questions.findIndex(q => q.question_id === questionId)
+  if (currentIndex === -1) throw new Error('Question not found in list')
+
+  if (direction === 'up' && currentIndex > 0) {
+    const tempPos = questions[currentIndex].position
+    questions[currentIndex].position = questions[currentIndex - 1].position
+    questions[currentIndex - 1].position = tempPos
+  } else if (direction === 'down' && currentIndex < questions.length - 1) {
+    const tempPos = questions[currentIndex].position
+    questions[currentIndex].position = questions[currentIndex + 1].position
+    questions[currentIndex + 1].position = tempPos
+  } else {
+    return // Cannot move further
+  }
+
+  // Ensure positions are strictly sequential (fix any existing gaps)
+  const updates = questions.map((q, index) => ({
+    id: q.id,
+    list_id: listId,
+    question_id: q.question_id,
+    position: index
+  }))
+
+  const { error: updateError } = await supabase
+    .from('list_questions')
+    .upsert(updates, { onConflict: 'id' })
+
+  if (updateError) throw updateError
+  revalidatePath(`/lists/${listId}`)
+}
+
+export async function migrateListQuestion(oldListId: string, newListId: string, questionId: string) {
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) throw new Error('Unauthorized')
+
+  // Verify ownership of both lists
+  const { data: lists } = await supabase
+    .from('lists')
+    .select('id')
+    .in('id', [oldListId, newListId])
+    .eq('user_id', user.id)
+
+  if (!lists || lists.length !== 2) throw new Error('List not found or unauthorized')
+
+  // Get max position in new list
+  const { data: newQuestions } = await supabase
+    .from('list_questions')
+    .select('position')
+    .eq('list_id', newListId)
+    .order('position', { ascending: false })
+    .limit(1)
+
+  const newPosition = (newQuestions?.[0]?.position ?? -1) + 1
+
+  // Get the row ID from old list
+  const { data: oldRow } = await supabase
+    .from('list_questions')
+    .select('id')
+    .eq('list_id', oldListId)
+    .eq('question_id', questionId)
+    .single()
+
+  if (!oldRow) throw new Error('Question not found in original list')
+
+  // Update it to new list
+  const { error } = await supabase
+    .from('list_questions')
+    .update({ list_id: newListId, position: newPosition })
+    .eq('id', oldRow.id)
+
+  if (error) throw error
+  revalidatePath('/lists')
+  revalidatePath(`/lists/${oldListId}`)
+  revalidatePath(`/lists/${newListId}`)
+}
