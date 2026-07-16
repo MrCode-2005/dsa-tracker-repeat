@@ -89,6 +89,7 @@ export async function getListQuestions(
     progress: progressMap.get(q.id) || null,
     revision_count: revisionMap.get(q.id) || { completed: 0, total: 0 },
     current_revision: revisionMap.get(q.id)?.current || null,
+    list_position: positionMap.get(q.id)
   }))
 
   // Apply status filter

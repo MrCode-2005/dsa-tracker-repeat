@@ -186,8 +186,7 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
             </div>
 
             {questions.map((q, idx) => {
-              const originalIndex = allQuestions?.findIndex(aq => aq.id === q.id) ?? -1
-              const displayIndex = originalIndex >= 0 ? originalIndex + 1 : idx + 1
+              const displayIndex = typeof q.list_position === 'number' ? q.list_position + 1 : idx + 1
 
               return (
                 <div

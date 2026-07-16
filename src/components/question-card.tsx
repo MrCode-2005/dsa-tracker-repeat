@@ -17,6 +17,7 @@ import type { QuestionWithProgress, BookmarkFolder } from '@/lib/types/database'
 import { toast } from 'sonner'
 import { useQuery } from '@tanstack/react-query'
 import { getProfileClient } from '@/lib/queries/auth'
+import { useRouter } from 'next/navigation'
 
 interface QuestionCardProps {
   question: QuestionWithProgress
@@ -28,6 +29,7 @@ interface QuestionCardProps {
 }
 
 export function QuestionCard({ question, listId, bookmarkFolders = [], questionFolderIds = [], onUpdate, index }: QuestionCardProps) {
+  const router = useRouter()
   const [isSolved, setIsSolved] = useState(question.progress?.status === 'solved')
   const [animateSolve, setAnimateSolve] = useState(false)
   const [noteText, setNoteText] = useState(question.progress?.note || '')
@@ -180,7 +182,7 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
     <>
     <div 
       className="group grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_32px_44px_auto_36px_36px_36px_84px_36px_80px_36px] gap-3 md:gap-4 items-center px-4 py-3 rounded-lg border border-border bg-card/50 glow-hover transition-all duration-200 hover:bg-card/80 cursor-pointer"
-      onDoubleClick={() => window.open(`/problems/${question.id}`, '_blank')}
+      onClick={() => router.push(`/problems/${question.id}`)}
     >
       
       {/* 1. Problem Column */}
@@ -387,7 +389,8 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
                   placeholder="Add your notes here..."
                   value={noteText}
                   onChange={(e) => handleNoteChange(e.target.value)}
-                  className="min-h-24 min-w-[280px] bg-background/50 text-sm resize"
+                  style={{ resize: 'both', fieldSizing: 'fixed' } as any}
+                  className="min-h-24 min-w-[280px] bg-background/50 text-sm"
                 />
                 <p className="text-xs text-muted-foreground">Auto-saved after you stop typing</p>
               </div>

@@ -336,6 +336,7 @@ export type QuestionWithProgress = Question & {
   progress: UserQuestionProgress | null
   revision_count: { completed: number; total: number }
   current_revision: RevisionSchedule | null
+  list_position?: number
 }
 
 export type ListWithProgress = List & {
