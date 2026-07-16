@@ -34,13 +34,6 @@ export function CalendarView({ progressList, revisionsList, questionsList, bookm
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date()) // Default to today
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
 
-  // Memoize questions map for quick lookup
-  const questionsMap = useMemo(() => {
-    const map = new Map<string, QuestionWithProgress>()
-    questionsList.forEach(q => map.set(q.id, q))
-    return map
-  }, [questionsList])
-
   const nextMonth = () => setCurrentMonth(addMonths(currentMonth, 1))
   const prevMonth = () => setCurrentMonth(subMonths(currentMonth, 1))
 
@@ -205,7 +198,8 @@ export function CalendarView({ progressList, revisionsList, questionsList, bookm
           <DayDetails 
             date={selectedDate}
             activity={activityMap.get(format(selectedDate, 'yyyy-MM-dd')) || { solved: [], revised: [], due: [] }}
-            questionsMap={questionsMap}
+            progressList={progressList}
+            revisionsList={revisionsList}
             bookmarkFolders={bookmarkFolders}
           />
         )}

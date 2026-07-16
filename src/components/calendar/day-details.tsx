@@ -1,18 +1,80 @@
-import { useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { QuestionCard } from '@/components/question-card'
 import type { QuestionWithProgress } from '@/lib/types/database'
 import { ScrollArea } from '@/components/ui/scroll-area'
-
+import { createClient } from '@/lib/supabase/client'
+import { Loader2 } from 'lucide-react'
 
 interface DayDetailsProps {
   date: Date
   activity: { solved: any[], revised: any[], due: any[] }
-  questionsMap: Map<string, QuestionWithProgress>
+  progressList: any[]
+  revisionsList: any[]
   bookmarkFolders: any[]
 }
 
-export function DayDetails({ date, activity, questionsMap, bookmarkFolders }: DayDetailsProps) {
-  
+export function DayDetails({ date, activity, progressList, revisionsList, bookmarkFolders }: DayDetailsProps) {
+  const [questionsMap, setQuestionsMap] = useState<Map<string, QuestionWithProgress>>(new Map())
+  const [isLoading, setIsLoading] = useState(false)
+
+  const neededIds = useMemo(() => {
+    return Array.from(new Set([
+      ...activity.solved.map(s => s.question_id),
+      ...activity.revised.map(r => r.question_id),
+      ...activity.due.map(d => d.question_id)
+    ]))
+  }, [activity])
+
+  useEffect(() => {
+    if (neededIds.length === 0) {
+      setQuestionsMap(new Map())
+      return
+    }
+
+    async function fetchQuestions() {
+      setIsLoading(true)
+      try {
+        const supabase = createClient()
+        const { data } = await supabase
+          .from('questions')
+          .select('*')
+          .in('id', neededIds)
+
+        if (data) {
+          const today = new Date().toISOString().split('T')[0]
+          
+          const progressMap = new Map(progressList.map(p => [p.question_id, p]))
+          
+          const revisionStatsMap = new Map<string, { completed: number; total: number; current: any }>()
+          
+          data.forEach(q => {
+            const revisions = revisionsList.filter(r => r.question_id === q.id)
+            const completed = revisions.filter(r => r.completed).length
+            const currentDue = revisions.find(r => !r.completed && r.scheduled_for <= today) || null
+            revisionStatsMap.set(q.id, { completed, total: revisions.length, current: currentDue })
+          })
+
+          const mappedQuestions = data.map(q => ({
+            ...q,
+            progress: progressMap.get(q.id) || null,
+            revision_count: revisionStatsMap.get(q.id) || { completed: 0, total: 0 },
+            current_revision: revisionStatsMap.get(q.id)?.current || null
+          }))
+
+          const map = new Map<string, QuestionWithProgress>()
+          mappedQuestions.forEach(q => map.set(q.id, q))
+          setQuestionsMap(map)
+        }
+      } catch (err) {
+        console.error("Error fetching day questions:", err)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchQuestions()
+  }, [neededIds.join(',')]) // Join neededIds for stable dependency
+
   const solvedQuestions = useMemo(() => {
     return activity.solved.map(s => questionsMap.get(s.question_id)).filter(Boolean) as QuestionWithProgress[]
   }, [activity.solved, questionsMap])
@@ -25,7 +87,7 @@ export function DayDetails({ date, activity, questionsMap, bookmarkFolders }: Da
     return activity.due.map(d => questionsMap.get(d.question_id)).filter(Boolean) as QuestionWithProgress[]
   }, [activity.due, questionsMap])
 
-  const totalActivity = solvedQuestions.length + revisedQuestions.length + dueQuestions.length
+  const totalActivity = activity.solved.length + activity.revised.length + activity.due.length
 
   if (totalActivity === 0) {
     return (
@@ -33,6 +95,15 @@ export function DayDetails({ date, activity, questionsMap, bookmarkFolders }: Da
         <div className="text-4xl mb-4 opacity-50">📅</div>
         <h4 className="font-medium text-foreground mb-1">No Activity</h4>
         <p className="text-sm">You didn&apos;t solve or revise any questions on this date, and no revisions are due.</p>
+      </div>
+    )
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-muted-foreground">
+        <Loader2 className="w-8 h-8 animate-spin mb-4" />
+        <p className="text-sm">Loading questions...</p>
       </div>
     )
   }
