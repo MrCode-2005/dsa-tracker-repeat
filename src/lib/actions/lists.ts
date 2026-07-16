@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { PRESET_LISTS } from '@/lib/types/database'
 import { resolveLeetCodeData } from '@/lib/leetcode-api'
 
-export async function createList(name: string, description?: string, color?: string) {
+export async function createList(name: string, description?: string, color?: string, pastedText?: string) {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   
@@ -26,6 +26,36 @@ export async function createList(name: string, description?: string, color?: str
     .select()
     .single()
   if (error) throw error
+
+  if (pastedText && pastedText.trim().length > 0) {
+    const lines = pastedText.split('\n')
+    const leetcodeNumbers = new Set<number>()
+
+    for (const line of lines) {
+      // Find the first number in the line. Optionally prefixed by LeetCode or LC.
+      const match = line.match(/(?:leetcode|lc)?\s*#?\b(\d+)\b/i)
+      if (match) {
+        leetcodeNumbers.add(parseInt(match[1], 10))
+      }
+    }
+
+    if (leetcodeNumbers.size > 0) {
+      const { data: matchedQuestions } = await supabase
+        .from('questions')
+        .select('id, leetcode_number')
+        .in('leetcode_number', Array.from(leetcodeNumbers))
+
+      if (matchedQuestions && matchedQuestions.length > 0) {
+        const listQuestionsData = matchedQuestions.map((q, index) => ({
+          list_id: data.id,
+          question_id: q.id,
+          position: index
+        }))
+
+        await supabase.from('list_questions').insert(listQuestionsData)
+      }
+    }
+  }
 
   revalidatePath('/lists')
   return data

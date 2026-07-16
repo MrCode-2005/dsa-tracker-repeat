@@ -25,6 +25,7 @@ export default function ListsPage() {
   const [showAdopt, setShowAdopt] = useState(false)
   const [newName, setNewName] = useState('')
   const [newDesc, setNewDesc] = useState('')
+  const [pastedText, setPastedText] = useState('')
   const [isAdopting, setIsAdopting] = useState<string | null>(null)
 
   const { data: lists, isLoading } = useQuery({
@@ -35,11 +36,12 @@ export default function ListsPage() {
   const handleCreate = async () => {
     if (!newName.trim()) return
     try {
-      await createList(newName.trim(), newDesc.trim() || undefined)
+      await createList(newName.trim(), newDesc.trim() || undefined, undefined, pastedText.trim() || undefined)
       queryClient.invalidateQueries({ queryKey: ['user-lists'] })
       setShowCreate(false)
       setNewName('')
       setNewDesc('')
+      setPastedText('')
       toast.success('List created!')
     } catch {
       toast.error('Failed to create list')
@@ -198,6 +200,18 @@ export default function ListsPage() {
             <div>
               <Label>Description (optional)</Label>
               <Textarea value={newDesc} onChange={(e) => setNewDesc(e.target.value)} placeholder="What's this list for?" className="mt-1.5" />
+            </div>
+            <div>
+              <Label>Paste Problems (optional)</Label>
+              <Textarea 
+                value={pastedText} 
+                onChange={(e) => setPastedText(e.target.value)} 
+                placeholder="e.g. LeetCode 217 - Contains Duplicate&#10;LeetCode 219 - Contains Duplicate ll" 
+                className="mt-1.5 h-32" 
+              />
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Paste a raw list of problems. We will automatically detect LeetCode numbers and add them.
+              </p>
             </div>
             <Button onClick={handleCreate} className="w-full" disabled={!newName.trim()}>Create List</Button>
           </div>
