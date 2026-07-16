@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/client'
 import type { QuestionWithProgress } from '@/lib/types/database'
 
 export interface CalendarData {
@@ -9,7 +9,7 @@ export interface CalendarData {
 }
 
 export async function getCalendarData(): Promise<CalendarData> {
-  const supabase = await createClient()
+  const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { progressList: [], revisionsList: [], questionsList: [] }
 
