@@ -76,7 +76,7 @@ export function ProblemDetailsDialog({ questionId, open, onOpenChange, onUpdate 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent aria-describedby={undefined} className="max-w-[100vw] h-[100dvh] m-0 rounded-none p-0 flex flex-col bg-background/95 backdrop-blur-xl border-none">
+      <DialogContent aria-describedby={undefined} className="sm:max-w-[100vw] max-w-[100vw] w-screen h-[100dvh] m-0 rounded-none p-0 flex flex-col bg-background/95 backdrop-blur-xl border-none">
         <DialogTitle className="sr-only">Problem Details</DialogTitle>
         {isLoading || !details ? (
           <div className="flex-1 flex items-center justify-center">
