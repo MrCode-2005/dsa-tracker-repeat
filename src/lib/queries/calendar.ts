@@ -79,7 +79,7 @@ export async function getCalendarData(): Promise<CalendarData> {
       qCount: questions?.length,
       idCount: questionIds.length,
       firstId: questionIds[0],
-      err: error?.message
+      err: (error as any)?.message
     }
   }
 }
