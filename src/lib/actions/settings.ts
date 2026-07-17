@@ -13,6 +13,14 @@ export async function clearAllRevisions() {
     .eq('user_id', user.id)
 
   if (error) throw error
+
+  // Clear revision history from activity log
+  await supabase
+    .from('activity_log')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('activity_type', 'revision')
+
   revalidatePath('/', 'layout')
 }
 
@@ -27,6 +35,15 @@ export async function removeProblemFromRevisions(questionId: string) {
     .eq('question_id', questionId)
 
   if (error) throw error
+
+  // Clear revision history for this problem
+  await supabase
+    .from('activity_log')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('question_id', questionId)
+    .eq('activity_type', 'revision')
+
   revalidatePath('/', 'layout')
 }
 
@@ -53,6 +70,15 @@ export async function resetProblemRevisionCount(questionId: string) {
     .eq('id', progress.id)
 
   if (error) throw error
+
+  // Clear revision history for this problem
+  await supabase
+    .from('activity_log')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('question_id', questionId)
+    .eq('activity_type', 'revision')
+
   revalidatePath('/', 'layout')
 }
 
@@ -72,6 +98,14 @@ export async function unsolveProblem(questionId: string) {
     .eq('question_id', questionId)
 
   if (error) throw error
+
+  // Clear all activity history for this problem
+  await supabase
+    .from('activity_log')
+    .delete()
+    .eq('user_id', user.id)
+    .eq('question_id', questionId)
+
   revalidatePath('/', 'layout')
 }
 export async function getManagedData() {
