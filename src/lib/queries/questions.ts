@@ -3,7 +3,7 @@ import type { QuestionWithProgress } from '@/lib/types/database'
 
 export interface QuestionFilters {
   search?: string
-  status?: 'all' | 'solved' | 'unsolved'
+  status?: 'all' | 'solved' | 'unsolved' | 'review'
   difficulty?: 'all' | 'Easy' | 'Medium' | 'Hard'
   companies?: string[]
   topic?: string
@@ -97,6 +97,8 @@ export async function getListQuestions(
     result = result.filter(q => q.progress?.status === 'solved')
   } else if (filters.status === 'unsolved') {
     result = result.filter(q => !q.progress || q.progress.status === 'unsolved')
+  } else if (filters.status === 'review') {
+    result = result.filter(q => q.revision_count.total > 0)
   }
 
   // Sort by position

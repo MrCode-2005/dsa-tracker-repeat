@@ -94,6 +94,7 @@ export function FilterBar({ companies = [], topics = [], onRandomPick, totalCoun
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="unsolved">Unsolved</SelectItem>
               <SelectItem value="solved">Solved</SelectItem>
+              <SelectItem value="review">To Review</SelectItem>
             </SelectContent>
           </Select>
         </div>
