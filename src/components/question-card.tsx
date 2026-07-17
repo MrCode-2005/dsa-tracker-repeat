@@ -21,6 +21,7 @@ import { getProfileClient } from '@/lib/queries/auth'
 import { getUserLists } from '@/lib/queries/lists'
 import { useRouter } from 'next/navigation'
 import { useQueryClient } from '@tanstack/react-query'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 interface QuestionCardProps {
   question: QuestionWithProgress
@@ -150,7 +151,6 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
 
   const handleRemoveFromList = useCallback(async () => {
     if (!listId) return
-    if (!confirm('Remove this question from the list?')) return
     try {
       await removeQuestionFromList(listId, question.id)
       toast.success('Question removed')
@@ -651,10 +651,21 @@ export function QuestionCard({ question, listId, bookmarkFolders = [], questionF
                     )}
                     
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" onClick={handleRemoveFromList}>
-                      <Trash2 className="w-4 h-4 mr-2" />
-                      Remove from List
-                    </DropdownMenuItem>
+                    <ConfirmDialog
+                      title="Remove from list?"
+                      description="Are you sure you want to remove this question from the current list?"
+                      confirmText="Remove"
+                      variant="destructive"
+                      onConfirm={handleRemoveFromList}
+                    >
+                      <DropdownMenuItem 
+                        className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer" 
+                        onSelect={(e) => e.preventDefault()}
+                      >
+                        <Trash2 className="w-4 h-4 mr-2" />
+                        Remove from List
+                      </DropdownMenuItem>
+                    </ConfirmDialog>
                   </>
                 )}
               </DropdownMenuContent>

@@ -6,6 +6,9 @@ import { getFullProblemDetails } from '@/lib/queries/questions'
 import { getProfileClient } from '@/lib/queries/auth'
 import { ExternalLink, Loader2, PlayCircle, FolderOpen, Bookmark, CalendarCheck, CheckCircle2, Circle, ArrowLeft } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
 import { updateQuestionNote, updateVideoUrls, resetToDefaultVideoUrls } from '@/lib/actions/questions'
@@ -153,8 +156,12 @@ export default function ProblemDetailsPage({ params }: PageProps) {
                   <p className="text-xs text-muted-foreground mt-1">Override the default search links for specific channels.</p>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="destructive" className="bg-red-500/20 text-red-500 hover:bg-red-500/30" onClick={async () => {
-                    if (confirm('Are you sure you want to reset all video links to their original hardcoded defaults?')) {
+                  <ConfirmDialog
+                    title="Reset to default?"
+                    description="Are you sure you want to reset all video links to their original hardcoded defaults?"
+                    confirmText="Reset"
+                    variant="destructive"
+                    onConfirm={async () => {
                       if (questionId) {
                         try {
                           const defaultUrls = await resetToDefaultVideoUrls(questionId, details?.question.leetcode_number || null)
@@ -165,10 +172,12 @@ export default function ProblemDetailsPage({ params }: PageProps) {
                           toast.error('Failed to reset links')
                         }
                       }
-                    }
-                  }}>
-                    Reset to Default
-                  </Button>
+                    }}
+                  >
+                    <Button size="sm" variant="destructive" className="bg-red-500/20 text-red-500 hover:bg-red-500/30">
+                      Reset to Default
+                    </Button>
+                  </ConfirmDialog>
                   <Button size="sm" variant="secondary" onClick={handleSaveVideoUrls} disabled={isSavingUrls}>
                     {isSavingUrls ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save Links'}
                   </Button>

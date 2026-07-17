@@ -12,6 +12,7 @@ import { QuestionListSkeleton, ListCardSkeleton } from '@/components/loading-ske
 import { ErrorBoundary } from '@/components/error-boundary'
 import { getBookmarkFolders, getBookmarkFolderQuestions } from '@/lib/queries/bookmarks'
 import { createBookmarkFolder, deleteBookmarkFolder } from '@/lib/actions/questions'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { toast } from 'sonner'
 
 export default function BookmarksPage() {
@@ -48,7 +49,6 @@ export default function BookmarksPage() {
   }
 
   const handleDelete = async (folderId: string) => {
-    if (!confirm('Delete this folder? Bookmarks will be removed.')) return
     try {
       await deleteBookmarkFolder(folderId)
       queryClient.invalidateQueries({ queryKey: ['bookmark-folders'] })
@@ -108,14 +108,23 @@ export default function BookmarksPage() {
                           <p className="text-xs text-muted-foreground">{f.item_count} questions</p>
                         </div>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="text-muted-foreground hover:text-destructive"
-                        onClick={(e) => { e.stopPropagation(); handleDelete(f.id) }}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
+                      <div onClick={(e) => e.stopPropagation()}>
+                        <ConfirmDialog
+                          title="Delete folder?"
+                          description="Bookmarks inside this folder will be removed. This cannot be undone."
+                          confirmText="Delete"
+                          variant="destructive"
+                          onConfirm={() => handleDelete(f.id)}
+                        >
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-muted-foreground hover:text-destructive"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </Button>
+                        </ConfirmDialog>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

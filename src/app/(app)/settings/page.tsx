@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { updateProfile, signOut } from '@/lib/actions/auth'
 import { clearAllRevisions, getManagedData } from '@/lib/actions/settings'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
 import { toast } from 'sonner'
@@ -185,22 +186,27 @@ export default function SettingsPage() {
             >
               Manage Specific Problems
             </Button>
-            <Button
+            <ConfirmDialog
+              title="Clear All Revisions"
+              description="Are you sure you want to completely wipe all your scheduled revisions? This cannot be undone."
+              confirmText="Wipe Revisions"
               variant="destructive"
-              className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-              onClick={async () => {
-                if (confirm('Are you sure you want to completely wipe all your scheduled revisions? This cannot be undone.')) {
-                  try {
-                    await clearAllRevisions()
-                    toast.success('All revisions cleared')
-                  } catch {
-                    toast.error('Failed to clear revisions')
-                  }
+              onConfirm={async () => {
+                try {
+                  await clearAllRevisions()
+                  toast.success('All revisions cleared')
+                } catch {
+                  toast.error('Failed to clear revisions')
                 }
               }}
             >
-              Clear All Revisions
-            </Button>
+              <Button
+                variant="destructive"
+                className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                Clear All Revisions
+              </Button>
+            </ConfirmDialog>
           </div>
         </CardContent>
       </Card>

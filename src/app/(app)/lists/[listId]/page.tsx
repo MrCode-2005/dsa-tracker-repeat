@@ -20,6 +20,7 @@ import { toast } from 'sonner'
 import { useRouter } from 'next/navigation'
 import { SessionProgress } from '@/components/session-progress'
 import { Input } from '@/components/ui/input'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 export default function ListDetailPage({ params }: { params: Promise<{ listId: string }> }) {
   const { listId } = use(params)
@@ -194,16 +195,22 @@ export default function ListDetailPage({ params }: { params: Promise<{ listId: s
             <AddQuestionDialog listId={listId} onSuccess={handleRefresh} />
           )}
 
-          <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10" onClick={async () => {
-            if (confirm('Delete this list?')) {
+          <ConfirmDialog
+            title="Delete list?"
+            description="Are you sure you want to delete this list? This cannot be undone."
+            confirmText="Delete"
+            variant="destructive"
+            onConfirm={async () => {
               await deleteList(listId)
               queryClient.invalidateQueries({ queryKey: ['user-lists'] })
               toast.success('List deleted')
               router.push('/lists')
-            }
-          }}>
-            <Trash2 className="w-4 h-4" />
-          </Button>
+            }}
+          >
+            <Button variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10">
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          </ConfirmDialog>
         </div>
 
         <ErrorBoundary>

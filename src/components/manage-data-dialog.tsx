@@ -17,6 +17,7 @@ import {
 } from '@/lib/actions/settings'
 import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 export type ManagedQuestion = {
   id: string
@@ -142,19 +143,22 @@ export function ManageDataDialog({ isOpen, onClose, fetchData }: ManageDataDialo
                       Reset Count
                     </Button>
                   )}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 text-xs bg-background/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
-                    disabled={processingId === q.id}
-                    onClick={() => {
-                      if (confirm('Are you sure you want to completely mark this as unsolved? All history will be lost.')) {
-                        handleAction(q.id, () => unsolveProblem(q.id), 'Marked as unsolved')
-                      }
-                    }}
+                  <ConfirmDialog
+                    title="Unsolve problem?"
+                    description="Are you sure you want to completely mark this as unsolved? All history will be lost."
+                    confirmText="Unsolve"
+                    variant="destructive"
+                    onConfirm={() => handleAction(q.id, () => unsolveProblem(q.id), 'Marked as unsolved')}
                   >
-                    Unsolve
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 text-xs bg-background/50 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
+                      disabled={processingId === q.id}
+                    >
+                      Unsolve
+                    </Button>
+                  </ConfirmDialog>
                 </div>
               </div>
             ))
