@@ -76,6 +76,15 @@ export async function toggleQuestionSolved(questionId: string) {
       .update({ status: 'unsolved', updated_at: now })
       .eq('id', existing.id)
     if (error) throw error
+
+    // Remove the activity log for today if they accidentally marked it
+    const todayDate = now.split('T')[0]
+    await supabase.from('activity_log')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('question_id', questionId)
+      .eq('activity_type', 'solve')
+      .eq('activity_date', todayDate)
   }
 
   revalidatePath('/', 'layout')

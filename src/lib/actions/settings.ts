@@ -159,3 +159,19 @@ export async function getManagedData() {
     }
   })
 }
+
+export async function clearAllTestData() {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  // Delete all activity logs
+  await supabase.from('activity_log').delete().eq('user_id', user.id)
+  
+  // Delete all revision schedules
+  await supabase.from('revision_schedule').delete().eq('user_id', user.id)
+  
+  // Delete all question progress (unsolves everything)
+  await supabase.from('user_question_progress').delete().eq('user_id', user.id)
+
+  revalidatePath('/', 'layout')
+}

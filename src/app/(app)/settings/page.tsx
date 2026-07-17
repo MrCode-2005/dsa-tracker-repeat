@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { updateProfile, signOut } from '@/lib/actions/auth'
-import { clearAllRevisions, getManagedData } from '@/lib/actions/settings'
+import { clearAllRevisions, clearAllTestData, getManagedData } from '@/lib/actions/settings'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
@@ -188,7 +188,7 @@ export default function SettingsPage() {
             </Button>
             <ConfirmDialog
               title="Clear All Revisions"
-              description="Are you sure you want to completely wipe all your scheduled revisions? This cannot be undone."
+              description="Are you sure you want to wipe all your scheduled revisions? Solved problems will be kept."
               confirmText="Wipe Revisions"
               variant="destructive"
               onConfirm={async () => {
@@ -205,6 +205,27 @@ export default function SettingsPage() {
                 className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 Clear All Revisions
+              </Button>
+            </ConfirmDialog>
+            <ConfirmDialog
+              title="Wipe All Data"
+              description="Are you absolutely sure? This will wipe ALL your history, including solved problems, revisions, and calendar activity. This CANNOT be undone."
+              confirmText="Wipe Everything"
+              variant="destructive"
+              onConfirm={async () => {
+                try {
+                  await clearAllTestData()
+                  toast.success('All data wiped completely')
+                } catch {
+                  toast.error('Failed to wipe data')
+                }
+              }}
+            >
+              <Button
+                variant="destructive"
+                className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                Clear Test Data
               </Button>
             </ConfirmDialog>
           </div>
