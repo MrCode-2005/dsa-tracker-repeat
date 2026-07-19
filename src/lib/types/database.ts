@@ -12,6 +12,8 @@ export interface Database {
           current_streak: number
           highest_streak: number
           last_activity_date: string | null
+          telegram_chat_id: string | null
+          telegram_link_token: string | null
           created_at: string
           youtube_channels: { name: string; color: string }[] | null
         }
@@ -23,6 +25,8 @@ export interface Database {
           current_streak?: number
           highest_streak?: number
           last_activity_date?: string | null
+          telegram_chat_id?: string | null
+          telegram_link_token?: string | null
           created_at?: string
           youtube_channels?: { name: string; color: string }[] | null
         }
@@ -34,6 +38,8 @@ export interface Database {
           current_streak?: number
           highest_streak?: number
           last_activity_date?: string | null
+          telegram_chat_id?: string | null
+          telegram_link_token?: string | null
           created_at?: string
           youtube_channels?: { name: string; color: string }[] | null
         }
