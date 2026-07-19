@@ -17,8 +17,20 @@ export async function generateTelegramLinkToken() {
 
   if (error) throw error
   
-  revalidatePath('/settings')
+  revalidatePath('/reminders')
   return token
+}
+
+export async function updateUserTimezone(timezone: string) {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ timezone })
+    .eq('id', user.id)
+
+  if (error) throw error
 }
 
 export async function disconnectTelegram() {
@@ -33,4 +45,18 @@ export async function disconnectTelegram() {
   if (error) throw error
   
   revalidatePath('/settings')
+}
+
+export async function updateNotificationSettings(settings: any) {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({ notification_settings: settings })
+    .eq('id', user.id)
+
+  if (error) throw error
+  
+  revalidatePath('/reminders')
 }

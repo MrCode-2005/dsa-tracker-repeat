@@ -13,6 +13,7 @@ import {
   BarChart,
   Calendar,
   Zap,
+  BellRing,
   Menu,
   X,
 } from 'lucide-react'
@@ -26,6 +27,7 @@ const navItems = [
   { href: '/revision', label: 'Revision Hub', icon: History },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/analytics', label: 'Analytics', icon: BarChart },
+  { href: '/reminders', label: 'Reminders', icon: BellRing },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
 

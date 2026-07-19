@@ -13,7 +13,6 @@ import { Separator } from '@/components/ui/separator'
 import { updateProfile, signOut } from '@/lib/actions/auth'
 import { clearAllRevisions, clearAllTestData, getManagedData } from '@/lib/actions/settings'
 import { ConfirmDialog } from '@/components/confirm-dialog'
-import { TelegramSettings } from '@/components/telegram-settings'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
 import { toast } from 'sonner'
@@ -143,11 +142,7 @@ export default function SettingsPage() {
 
       <YoutubeSettings initialChannels={profile?.youtube_channels || null} />
 
-      <Separator />
 
-      <TelegramSettings chatId={profile?.telegram_chat_id || null} linkToken={profile?.telegram_link_token || null} />
-
-      <Separator />
 
       {/* Extension Sync */}
       <Card className="bg-card/50 border-border">
