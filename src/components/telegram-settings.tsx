@@ -80,11 +80,11 @@ export function TelegramSettings({ chatId, linkToken }: TelegramSettingsProps) {
                 </Button>
               ) : (
                 <div className="flex flex-col gap-2">
-                  <Button asChild className="bg-[#2AABEE] hover:bg-[#2AABEE]/90 text-white">
+                  <Button render={
                     <a href={telegramLink!} target="_blank" rel="noopener noreferrer">
                       Open Telegram
                     </a>
-                  </Button>
+                  } className="bg-[#2AABEE] hover:bg-[#2AABEE]/90 text-white" />
                   <p className="text-[10px] text-muted-foreground text-center">
                     Click Start in the bot chat
                   </p>
