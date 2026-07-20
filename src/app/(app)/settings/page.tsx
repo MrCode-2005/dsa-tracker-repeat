@@ -12,6 +12,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { updateProfile, signOut } from '@/lib/actions/auth'
 import { clearAllRevisions, clearAllTestData, getManagedData } from '@/lib/actions/settings'
+import { getEffectiveStreak } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile } from '@/lib/types/database'
@@ -120,7 +121,7 @@ export default function SettingsPage() {
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
               <p className="text-muted-foreground">Current Streak</p>
-              <p className="font-mono font-bold text-lg">{profile?.current_streak || 0} days</p>
+              <p className="font-mono font-bold text-lg">{getEffectiveStreak(profile?.current_streak || 0, profile?.last_activity_date, profile?.timezone)} days</p>
             </div>
             <div>
               <p className="text-muted-foreground">Highest Streak</p>

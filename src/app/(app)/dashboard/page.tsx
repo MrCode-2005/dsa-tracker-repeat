@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button'
 import { StreakCounter } from '@/components/streak-counter'
 import { QuestionCard } from '@/components/question-card'
 import { StatCardSkeleton, QuestionCardSkeleton } from '@/components/loading-skeletons'
+import { DashboardHeader } from "@/components/dashboard/dashboard-header"
+import { getEffectiveStreak } from "@/lib/utils"
 import { ErrorBoundary } from '@/components/error-boundary'
 import { createClient } from '@/lib/supabase/client'
 import { getRevisionsDue } from '@/lib/queries/revisions'
@@ -63,7 +65,7 @@ export default function DashboardPage() {
           <Card className="bg-card/50 border-border h-full flex flex-col justify-center">
             <CardContent className="p-6">
               <StreakCounter
-                currentStreak={profile?.current_streak || 0}
+                currentStreak={getEffectiveStreak(profile?.current_streak || 0, profile?.last_activity_date, profile?.timezone)}
                 highestStreak={profile?.highest_streak || 0}
               />
             </CardContent>

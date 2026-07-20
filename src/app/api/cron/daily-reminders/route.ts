@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { getEffectiveStreak } from '@/lib/utils'
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -114,8 +115,9 @@ export async function GET(req: Request) {
 
       // 3. Streak Alert
       if (settings.streakAlert?.enabled !== false && settings.streakAlert?.time === localHour) {
-        if (user.current_streak > 0 && user.last_activity_date !== todayDateStr) {
-          messages.push((settings.streakAlert.message || DEFAULT_SETTINGS.streakAlert.message).replace('{{streak}}', user.current_streak.toString()))
+        const effectiveStreak = getEffectiveStreak(user.current_streak, user.last_activity_date, user.timezone);
+        if (effectiveStreak > 0 && user.last_activity_date !== todayDateStr) {
+          messages.push((settings.streakAlert.message || DEFAULT_SETTINGS.streakAlert.message).replace('{{streak}}', effectiveStreak.toString()))
         }
       }
 

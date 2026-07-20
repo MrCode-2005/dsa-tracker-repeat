@@ -4,6 +4,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { CalendarHeatmap } from '@/components/heatmap'
 import { StreakCounter } from '@/components/streak-counter'
+import { getEffectiveStreak } from '@/lib/utils'
+import { WeeklyActivityChart } from '@/components/analytics/weekly-activity-chart'
 import { ErrorBoundary } from '@/components/error-boundary'
 import { HeatmapSkeleton, ChartSkeleton, StatCardSkeleton } from '@/components/loading-skeletons'
 import { getActivityLog, getProgressByDifficulty, getProgressByTopic, getCumulativeSolves, getQuickStats } from '@/lib/queries/analytics'
@@ -55,7 +57,10 @@ export default function AnalyticsPage() {
       <ErrorBoundary>
         <Card className="bg-card/50 border-border">
           <CardContent className="p-6">
-            <StreakCounter currentStreak={profile?.current_streak || 0} highestStreak={profile?.highest_streak || 0} />
+            <StreakCounter 
+              currentStreak={getEffectiveStreak(profile?.current_streak || 0, profile?.last_activity_date, profile?.timezone)} 
+              highestStreak={profile?.highest_streak || 0} 
+            />
           </CardContent>
         </Card>
       </ErrorBoundary>
