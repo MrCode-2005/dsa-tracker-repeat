@@ -39,11 +39,11 @@ export async function middleware(request: NextRequest) {
 
   console.log("MIDDLEWARE USER:", user?.id)
 
-  // Redirect unauthenticated users away from protected routes
   const isAuthPage = request.nextUrl.pathname.startsWith('/auth')
   const isPublicPage = request.nextUrl.pathname === '/'
+  const isPublicApi = request.nextUrl.pathname.startsWith('/api/telegram') || request.nextUrl.pathname.startsWith('/api/cron')
 
-  if (!user && !isAuthPage && !isPublicPage) {
+  if (!user && !isAuthPage && !isPublicPage && !isPublicApi) {
     const url = request.nextUrl.clone()
     url.pathname = '/auth/login'
     return NextResponse.redirect(url)
