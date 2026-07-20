@@ -9,7 +9,6 @@ import { Button } from '@/components/ui/button'
 import { StreakCounter } from '@/components/streak-counter'
 import { QuestionCard } from '@/components/question-card'
 import { StatCardSkeleton, QuestionCardSkeleton } from '@/components/loading-skeletons'
-import { DashboardHeader } from "@/components/dashboard/dashboard-header"
 import { getEffectiveStreak } from "@/lib/utils"
 import { ErrorBoundary } from '@/components/error-boundary'
 import { createClient } from '@/lib/supabase/client'
