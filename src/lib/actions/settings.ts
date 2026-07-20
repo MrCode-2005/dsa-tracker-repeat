@@ -175,3 +175,30 @@ export async function clearAllTestData() {
 
   revalidatePath('/', 'layout')
 }
+
+export async function clearAnalyticsAndStreaks() {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  // Delete all activity logs (this clears the heatmap and cumulative graph)
+  await supabase.from('activity_log').delete().eq('user_id', user.id)
+  
+  // Reset streaks
+  await supabase.from('profiles').update({
+    current_streak: 0,
+    highest_streak: 0,
+    last_activity_date: null
+  }).eq('id', user.id)
+
+  revalidatePath('/', 'layout')
+}
+
+export async function clearHeatmap() {
+  const supabase = await createClient()
+  const user = await getSafeUser()
+
+  // Delete all activity logs
+  await supabase.from('activity_log').delete().eq('user_id', user.id)
+
+  revalidatePath('/', 'layout')
+}

@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { updateProfile, signOut } from '@/lib/actions/auth'
-import { clearAllRevisions, clearAllTestData, getManagedData } from '@/lib/actions/settings'
+import { clearAllRevisions, clearAllTestData, getManagedData, clearAnalyticsAndStreaks, clearHeatmap } from '@/lib/actions/settings'
 import { getEffectiveStreak } from '@/lib/utils'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { createClient } from '@/lib/supabase/client'
@@ -227,6 +227,48 @@ export default function SettingsPage() {
                 className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
               >
                 Clear Test Data
+              </Button>
+            </ConfirmDialog>
+            <ConfirmDialog
+              title="Clear Streaks & Graphs"
+              description="This will reset your current and highest streaks to 0, and clear all activity history from your graphs. This CANNOT be undone."
+              confirmText="Clear Graphs"
+              variant="destructive"
+              onConfirm={async () => {
+                try {
+                  await clearAnalyticsAndStreaks()
+                  toast.success('Graphs and streaks cleared')
+                } catch {
+                  toast.error('Failed to clear graphs')
+                }
+              }}
+            >
+              <Button
+                variant="destructive"
+                className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                Clear Graphs & Streaks
+              </Button>
+            </ConfirmDialog>
+            <ConfirmDialog
+              title="Clear Heatmap"
+              description="This will delete your activity history, effectively resetting your heatmap to empty. This CANNOT be undone."
+              confirmText="Clear Heatmap"
+              variant="destructive"
+              onConfirm={async () => {
+                try {
+                  await clearHeatmap()
+                  toast.success('Heatmap cleared')
+                } catch {
+                  toast.error('Failed to clear heatmap')
+                }
+              }}
+            >
+              <Button
+                variant="destructive"
+                className="bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              >
+                Clear Heatmap
               </Button>
             </ConfirmDialog>
           </div>
