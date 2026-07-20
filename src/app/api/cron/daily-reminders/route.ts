@@ -81,7 +81,7 @@ export async function GET(req: Request) {
       let messages: string[] = []
 
       // 1. Revision Reminder (Today)
-      if (settings.revisionReminder?.enabled !== false) {
+      if (settings.revisionReminder?.enabled !== false && settings.revisionReminder?.time === localHour) {
         const { count } = await supabase
           .from('revision_schedule')
           .select('*', { count: 'exact', head: true })
@@ -95,7 +95,7 @@ export async function GET(req: Request) {
       }
 
       // 2. Tomorrow's Preview
-      if (settings.tomorrowPreview?.enabled) {
+      if (settings.tomorrowPreview?.enabled && settings.tomorrowPreview?.time === localHour) {
         const tmr = new Date(localDate)
         tmr.setDate(tmr.getDate() + 1)
         const tmrDateStr = `${tmr.getFullYear()}-${String(tmr.getMonth() + 1).padStart(2, '0')}-${String(tmr.getDate()).padStart(2, '0')}`
@@ -113,14 +113,14 @@ export async function GET(req: Request) {
       }
 
       // 3. Streak Alert
-      if (settings.streakAlert?.enabled !== false) {
+      if (settings.streakAlert?.enabled !== false && settings.streakAlert?.time === localHour) {
         if (user.current_streak > 0 && user.last_activity_date !== todayDateStr) {
           messages.push((settings.streakAlert.message || DEFAULT_SETTINGS.streakAlert.message).replace('{{streak}}', user.current_streak.toString()))
         }
       }
 
       // 4. Inactivity Warning
-      if (settings.inactivityWarning?.enabled !== false) {
+      if (settings.inactivityWarning?.time === localHour) {
         const threshold = settings.inactivityWarning?.daysThreshold || 2
         if (daysInactive >= threshold && user.last_activity_date !== todayDateStr) {
           messages.push((settings.inactivityWarning.message || DEFAULT_SETTINGS.inactivityWarning.message).replace(/\{\{days\}\}/g, daysInactive.toString()))
@@ -128,7 +128,7 @@ export async function GET(req: Request) {
       }
 
       // 5. Periodic Report
-      if (settings.report?.enabled) {
+      if (settings.report?.enabled && settings.report?.time === localHour) {
         const isWeekly = settings.report.frequency === 'weekly'
         const isMonthly = settings.report.frequency === 'monthly'
         
@@ -164,7 +164,7 @@ export async function GET(req: Request) {
       }
 
       // 6. Overdue Reminder
-      if (settings.overdueReminder?.enabled !== false) {
+      if (settings.overdueReminder?.enabled !== false && settings.overdueReminder?.time === localHour) {
         const { count } = await supabase
           .from('revision_schedule')
           .select('*', { count: 'exact', head: true })

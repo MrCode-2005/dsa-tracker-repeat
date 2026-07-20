@@ -83,6 +83,21 @@ export function NotificationSettingsForm({ initialSettings, isConnected }: { ini
       {(settings[id]?.enabled !== false || hideToggle) && (
         <div className="grid gap-4 pl-4 border-l-2 border-border/50 ml-1 mt-4">
           <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Delivery Time (Local)</Label>
+              <Select 
+                value={settings[id]?.time || "20:00"} 
+                onValueChange={(v) => updateSection(id, 'time', v)}
+                disabled={!isConnected}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {HOURS.map(h => <SelectItem key={h} value={h}>{h}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
             {extraSettings}
           </div>
           
