@@ -79,14 +79,12 @@ export async function GET(req: Request) {
       const todayDateStr = `${yyyy}-${mm}-${dd}`
       
       // Calculate inactivity days — parse date parts directly to avoid UTC offset issues
-      let daysInactive = 0
+      let daysInactive = -1 // -1 means unknown (null last_activity_date)
       if (user.last_activity_date) {
         const [ly, lm, ld] = user.last_activity_date.split('-').map(Number)
         const lastActLocal = new Date(ly, lm - 1, ld) // local midnight, no TZ shift
         const todayLocal = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate())
         daysInactive = Math.round((todayLocal.getTime() - lastActLocal.getTime()) / (1000 * 60 * 60 * 24))
-      } else {
-        daysInactive = 999
       }
 
       let messages: string[] = []
@@ -134,7 +132,7 @@ export async function GET(req: Request) {
       // 4. Inactivity Warning — fixed: added enabled check
       if (settings.inactivityWarning?.enabled !== false && settings.inactivityWarning?.time === localHour) {
         const threshold = settings.inactivityWarning?.daysThreshold ?? 2
-        if (daysInactive >= threshold) {
+        if (daysInactive >= 0 && daysInactive >= threshold) {
           messages.push((settings.inactivityWarning.message || DEFAULT_SETTINGS.inactivityWarning.message).replace(/\{\{days\}\}/g, daysInactive.toString()))
         }
       }
