@@ -167,10 +167,7 @@ export function NotificationSettingsForm({ initialSettings, isConnected }: { ini
               >
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="2">2 Days</SelectItem>
-                  <SelectItem value="3">3 Days</SelectItem>
-                  <SelectItem value="5">5 Days</SelectItem>
-                  <SelectItem value="7">7 Days</SelectItem>
+                  {[0, 1, 2, 3, 5, 7].map(d => <SelectItem key={d} value={d.toString()}>{d} Days</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
