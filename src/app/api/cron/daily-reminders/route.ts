@@ -56,7 +56,16 @@ export async function GET(req: Request) {
     for (const user of users) {
       const chatId = user.telegram_chat_id!
       const tz = user.timezone || 'UTC'
-      const settings = (user.notification_settings as any) || DEFAULT_SETTINGS
+    const rawSettings = (user.notification_settings as any) || {}
+      // Deep-merge user settings with defaults so partial saves still work
+      const settings = {
+        revisionReminder: { ...DEFAULT_SETTINGS.revisionReminder, ...rawSettings.revisionReminder },
+        tomorrowPreview: { ...DEFAULT_SETTINGS.tomorrowPreview, ...rawSettings.tomorrowPreview },
+        streakAlert: { ...DEFAULT_SETTINGS.streakAlert, ...rawSettings.streakAlert },
+        inactivityWarning: { ...DEFAULT_SETTINGS.inactivityWarning, ...rawSettings.inactivityWarning },
+        report: { ...DEFAULT_SETTINGS.report, ...rawSettings.report },
+        overdueReminder: { ...DEFAULT_SETTINGS.overdueReminder, ...rawSettings.overdueReminder },
+      }
       
       // Get user's local date/time
       const now = new Date()
@@ -69,12 +78,13 @@ export async function GET(req: Request) {
       const dd = String(localDate.getDate()).padStart(2, '0')
       const todayDateStr = `${yyyy}-${mm}-${dd}`
       
-      // Calculate inactivity days
+      // Calculate inactivity days — parse date parts directly to avoid UTC offset issues
       let daysInactive = 0
       if (user.last_activity_date) {
-        const lastActivityDate = new Date(user.last_activity_date)
-        const diffTime = Math.abs(localDate.getTime() - lastActivityDate.getTime())
-        daysInactive = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+        const [ly, lm, ld] = user.last_activity_date.split('-').map(Number)
+        const lastActLocal = new Date(ly, lm - 1, ld) // local midnight, no TZ shift
+        const todayLocal = new Date(localDate.getFullYear(), localDate.getMonth(), localDate.getDate())
+        daysInactive = Math.round((todayLocal.getTime() - lastActLocal.getTime()) / (1000 * 60 * 60 * 24))
       } else {
         daysInactive = 999
       }
@@ -121,10 +131,10 @@ export async function GET(req: Request) {
         }
       }
 
-      // 4. Inactivity Warning
-      if (settings.inactivityWarning?.time === localHour) {
-        const threshold = settings.inactivityWarning?.daysThreshold || 2
-        if (daysInactive >= threshold && user.last_activity_date !== todayDateStr) {
+      // 4. Inactivity Warning — fixed: added enabled check
+      if (settings.inactivityWarning?.enabled !== false && settings.inactivityWarning?.time === localHour) {
+        const threshold = settings.inactivityWarning?.daysThreshold ?? 2
+        if (daysInactive >= threshold) {
           messages.push((settings.inactivityWarning.message || DEFAULT_SETTINGS.inactivityWarning.message).replace(/\{\{days\}\}/g, daysInactive.toString()))
         }
       }
