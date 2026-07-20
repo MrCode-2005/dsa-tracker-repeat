@@ -5,7 +5,7 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-export function getEffectiveStreak(currentStreak: number, lastActivityDate: string | null, timezone?: string) {
+export function getEffectiveStreak(currentStreak: number, lastActivityDate: string | null | undefined, timezone?: string | null) {
   if (currentStreak === 0 || !lastActivityDate) return 0;
   
   const tz = timezone || 'UTC';
