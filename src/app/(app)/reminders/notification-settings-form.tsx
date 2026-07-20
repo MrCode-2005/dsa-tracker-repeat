@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS = {
 export function NotificationSettingsForm({ initialSettings, isConnected }: { initialSettings: any, isConnected: boolean }) {
   const [settings, setSettings] = useState(initialSettings || DEFAULT_SETTINGS)
   const [isSaving, setIsSaving] = useState(false)
+  const [isTesting, setIsTesting] = useState(false)
   const [timezone, setTimezone] = useState(Intl.DateTimeFormat().resolvedOptions().timeZone)
 
   useEffect(() => {
@@ -47,6 +48,23 @@ export function NotificationSettingsForm({ initialSettings, isConnected }: { ini
       toast.error('Failed to save settings')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  const handleTest = async () => {
+    setIsTesting(true)
+    try {
+      const res = await fetch('/api/notifications/test', { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        toast.success('Test message sent to Telegram! Check the debug info it contains.')
+      } else {
+        toast.error(`Test failed: ${data.error}`)
+      }
+    } catch (error) {
+      toast.error('Test failed — check your internet connection')
+    } finally {
+      setIsTesting(false)
     }
   }
 
@@ -161,7 +179,7 @@ export function NotificationSettingsForm({ initialSettings, isConnected }: { ini
             <div className="space-y-2">
               <Label>Days of Inactivity</Label>
               <Select 
-                value={settings.inactivityWarning?.daysThreshold?.toString() || "2"} 
+                value={settings.inactivityWarning?.daysThreshold?.toString() ?? "2"} 
                 onValueChange={(v) => updateSection('inactivityWarning', 'daysThreshold', parseInt(v))}
                 disabled={!isConnected}
               >
@@ -202,8 +220,12 @@ export function NotificationSettingsForm({ initialSettings, isConnected }: { ini
           description="Reminds you if you missed revisions from previous days."
         />
 
-        <div className="pt-6">
-          <Button onClick={handleSave} disabled={isSaving || !isConnected} className="w-full">
+        <div className="pt-6 flex gap-3">
+          <Button onClick={handleTest} disabled={isTesting || !isConnected} variant="outline" className="flex-1">
+            {isTesting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : '🧪'}
+            Send Test
+          </Button>
+          <Button onClick={handleSave} disabled={isSaving || !isConnected} className="flex-1">
             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
             Save Preferences
           </Button>
