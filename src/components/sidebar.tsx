@@ -16,6 +16,7 @@ import {
   BellRing,
   Menu,
   X,
+  Trophy,
 } from 'lucide-react'
 import { useState } from 'react'
 import { cn } from '@/lib/utils'
@@ -27,6 +28,7 @@ const navItems = [
   { href: '/revision', label: 'Revision Hub', icon: History },
   { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
   { href: '/analytics', label: 'Analytics', icon: BarChart },
+  { href: '/leaderboard', label: 'Leaderboard', icon: Trophy },
   { href: '/reminders', label: 'Reminders', icon: BellRing },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
