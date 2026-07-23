@@ -86,41 +86,41 @@ export async function getLeaderboardData(timeFilter: TimeFilter): Promise<Leader
 
   const userIds = profiles.map(p => p.id)
 
-  // 2. Fetch solve counts by difficulty — all time
-  const { data: allTimeSolves } = await supabaseAdmin
-    .from('user_question_progress')
-    .select('user_id, question_id, status, questions!inner(difficulty)')
+  // 2. Fetch solve counts by difficulty
+  // If we have a cutoff date, we need to get solves from activity_log joined with questions
+  // Since we can't join activity_log -> questions easily if not explicitly foreign keyed in some setups,
+  // we can just fetch user_question_progress with date filtering if possible, 
+  // OR fetch all user_question_progress and filter by first_solved_at.
+  // Actually, activity_log records every solve. Let's fetch activity_log with questions.
+  let solvesQuery = supabaseAdmin
+    .from('activity_log')
+    .select('user_id, activity_type, activity_date, questions!inner(difficulty)')
     .in('user_id', userIds)
-    .eq('status', 'solved')
-
-  // 3. Fetch period activity (for week/month filters)
-  let periodActivityMap: Record<string, number> = {}
+    .eq('activity_type', 'solve')
+  
   if (cutoffDate) {
-    const { data: periodActivity } = await supabaseAdmin
-      .from('activity_log')
-      .select('user_id, activity_type, activity_date')
-      .in('user_id', userIds)
-      .eq('activity_type', 'solve')
-      .gte('activity_date', cutoffDate)
-
-    if (periodActivity) {
-      for (const row of periodActivity) {
-        periodActivityMap[row.user_id] = (periodActivityMap[row.user_id] || 0) + 1
-      }
-    }
+    solvesQuery = solvesQuery.gte('activity_date', cutoffDate)
   }
+  
+  const { data: solvesData } = await solvesQuery
 
-  // 4. Fetch completed revisions
-  const { data: revisions } = await supabaseAdmin
+  // 3. Fetch completed revisions
+  let revisionsQuery = supabaseAdmin
     .from('revision_schedule')
     .select('user_id')
     .in('user_id', userIds)
     .eq('completed', true)
 
+  if (cutoffDate) {
+    revisionsQuery = revisionsQuery.gte('completed_at', cutoffDate)
+  }
+  
+  const { data: revisions } = await revisionsQuery
+
   // Build lookup maps
   const solvesByUser: Record<string, { easy: number; medium: number; hard: number }> = {}
-  if (allTimeSolves) {
-    for (const row of allTimeSolves) {
+  if (solvesData) {
+    for (const row of solvesData) {
       if (!solvesByUser[row.user_id]) {
         solvesByUser[row.user_id] = { easy: 0, medium: 0, hard: 0 }
       }
@@ -142,9 +142,7 @@ export async function getLeaderboardData(timeFilter: TimeFilter): Promise<Leader
   const entries: Omit<LeaderboardEntry, 'rank'>[] = profiles.map(profile => {
     const solves = solvesByUser[profile.id] || { easy: 0, medium: 0, hard: 0 }
     const revisionsCompleted = revisionsByUser[profile.id] || 0
-    const periodSolves = cutoffDate
-      ? (periodActivityMap[profile.id] || 0)
-      : (solves.easy + solves.medium + solves.hard)
+    const totalSolvesCount = solves.easy + solves.medium + solves.hard
 
     const score = computeScore(
       solves.easy,
@@ -165,8 +163,8 @@ export async function getLeaderboardData(timeFilter: TimeFilter): Promise<Leader
       easyCount: solves.easy,
       mediumCount: solves.medium,
       hardCount: solves.hard,
-      totalSolves: solves.easy + solves.medium + solves.hard,
-      periodSolves,
+      totalSolves: totalSolvesCount, // this is period-specific solves
+      periodSolves: totalSolvesCount,
       revisionsCompleted,
       score,
       tier: getTier(score),
